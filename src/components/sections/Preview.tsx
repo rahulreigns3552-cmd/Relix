@@ -53,6 +53,26 @@ export function Preview() {
     return () => window.clearInterval(id);
   }, [load]);
 
+  useEffect(() => {
+    if (loading) return;
+    let focusId = '';
+    try {
+      focusId = sessionStorage.getItem('opslead_previewFocusId') || '';
+      if (focusId) sessionStorage.removeItem('opslead_previewFocusId');
+    } catch {
+      /* ignore */
+    }
+    if (!focusId) return;
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(`ig-post-${focusId}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ig-card-focus');
+      window.setTimeout(() => el.classList.remove('ig-card-focus'), 2200);
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [loading, items]);
+
   const actionable = useMemo(() => {
     const list = items.filter(
       (i) => i.status === 'pending' || i.status === 'changes_requested'
@@ -128,7 +148,7 @@ export function Preview() {
     const tags = (item.hashtags || []).join(' ');
     const isTomorrow = item.postDate === tomorrow;
     return (
-      <div key={item.id} className={`ig-card${isTomorrow ? ' ig-card-tomorrow' : ''}`}>
+      <div id={`ig-post-${item.id}`} key={item.id} className={`ig-card${isTomorrow ? ' ig-card-tomorrow' : ''}`}>
         <div className="ig-card-media">
           <img src={item.imageUrl} alt="Instagram preview" />
         </div>

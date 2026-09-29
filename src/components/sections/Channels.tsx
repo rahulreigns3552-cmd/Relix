@@ -69,6 +69,26 @@ export function Channels() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    if (!loaded) return;
+    let focus = '';
+    try {
+      focus = sessionStorage.getItem('opslead_channelFocus') || '';
+      if (focus) sessionStorage.removeItem('opslead_channelFocus');
+    } catch {
+      /* ignore */
+    }
+    if (!focus) return;
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById(`channel-row-${focus}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('channel-row-focus');
+      window.setTimeout(() => el.classList.remove('channel-row-focus'), 2200);
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [loaded, records]);
+
   const anyConnecting = Object.values(records).some((r) => r.status === 'connecting');
   useEffect(() => {
     if (!anyConnecting) return;
@@ -151,7 +171,7 @@ export function Channels() {
           const isBusy = !!busy[id] || !loaded;
           const err = errors[id];
           return (
-            <div key={id} className={`channel-row channel-${rec.status}`}>
+            <div id={`channel-row-${id}`} key={id} className={`channel-row channel-${rec.status}`}>
               <div>
                 <div className="channel-name">{name}</div>
                 <ChannelChip rec={rec} />

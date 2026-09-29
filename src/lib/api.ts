@@ -159,6 +159,15 @@ export const api = {
       body: JSON.stringify({}),
     }),
 
+  captureChatLead: (projectId: string) =>
+    request<{
+      ok: boolean;
+      leads: { id: string; projectId: string; time: string; to: string; transcript: { role: 'user' | 'relix'; text: string }[] }[];
+    }>(p(projectId, '/chat/completed'), {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+
   getIgQueue: (projectId: string) =>
     request<{ items: IgPost[] }>(p(projectId, '/ig/queue')),
 

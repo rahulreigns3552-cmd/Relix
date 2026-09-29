@@ -190,6 +190,8 @@ export interface ChatAttachment {
   caption?: string;
   hashtags?: string[];
   imageUrl?: string;
+  /** Optional IG queue post id — used to open Preview on that draft. */
+  postId?: string;
   widget?: ChatWidget;
   connector?: ChatConnector;
 }

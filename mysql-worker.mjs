@@ -194,6 +194,84 @@ async function writeRel(rel, value) {
   throw new Error(`cannot write ${rel}`);
 }
 
+function mapLead(row) {
+  if (!row) return null;
+  let transcript = row.transcript;
+  if (typeof transcript === 'string') {
+    try { transcript = JSON.parse(transcript); } catch { transcript = []; }
+  }
+  if (!Array.isArray(transcript)) transcript = [];
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    createdAt: row.created_at,
+    to: row.to_email,
+    emailedAt: row.emailed_at || null,
+    exchangeKey: row.exchange_key,
+    transcript,
+  };
+}
+
+const LEAD_COLUMNS = 'id, project_id, exchange_key, created_at, to_email, emailed_at, transcript';
+
+async function saveLeads(leads) {
+  const saved = [];
+  for (const lead of leads || []) {
+    if (!lead?.id || !lead.exchangeKey || !lead.projectId) continue;
+    await conn.query(
+      `INSERT INTO chat_leads (id, project_id, exchange_key, created_at, to_email, emailed_at, transcript)
+       VALUES (?, ?, ?, ?, ?, NULL, ?)
+       ON DUPLICATE KEY UPDATE transcript = VALUES(transcript)`,
+      [
+        String(lead.id),
+        String(lead.projectId),
+        String(lead.exchangeKey),
+        String(lead.createdAt || ''),
+        String(lead.to || ''),
+        JSON.stringify(lead.transcript || []),
+      ],
+    );
+    const [rows] = await conn.query(
+      `SELECT ${LEAD_COLUMNS} FROM chat_leads WHERE exchange_key = ? LIMIT 1`,
+      [String(lead.exchangeKey)],
+    );
+    const mapped = mapLead(rows[0]);
+    if (mapped) saved.push(mapped);
+  }
+  return saved;
+}
+
+async function pendingLeads() {
+  const [rows] = await conn.query(
+    `SELECT ${LEAD_COLUMNS} FROM chat_leads WHERE emailed_at IS NULL ORDER BY created_at ASC, id ASC`,
+  );
+  return rows.map(mapLead).filter(Boolean);
+}
+
+async function markLeadSent(id, emailedAt) {
+  const [rows] = await conn.query(
+    `SELECT ${LEAD_COLUMNS} FROM chat_leads WHERE id = ? LIMIT 1`,
+    [String(id || '')],
+  );
+  if (!rows.length) return { found: false };
+  if (!rows[0].emailed_at) {
+    await conn.query('UPDATE chat_leads SET emailed_at = ? WHERE id = ? AND emailed_at IS NULL', [
+      String(emailedAt),
+      String(id),
+    ]);
+  }
+  const [next] = await conn.query(
+    `SELECT ${LEAD_COLUMNS} FROM chat_leads WHERE id = ? LIMIT 1`,
+    [String(id)],
+  );
+  return { found: true, lead: mapLead(next[0]) };
+}
+
+async function deleteLead(id) {
+  const [result] = await conn.query('DELETE FROM chat_leads WHERE id = ?', [String(id || '')]);
+  return { ok: true, deleted: Number(result.affectedRows || 0) };
+}
+
 async function handle(op, payload) {
   if (op === 'read') return readRel(payload.rel);
   if (op === 'exists') return existsRel(payload.rel);
@@ -202,6 +280,10 @@ async function handle(op, payload) {
     const [rows] = await conn.query('SELECT DATABASE() AS db, COUNT(*) AS projects FROM projects');
     return { ok: true, db: rows[0].db, projects: Number(rows[0].projects) };
   }
+  if (op === 'leads_save') return saveLeads(payload.leads);
+  if (op === 'leads_pending') return pendingLeads();
+  if (op === 'lead_mark_sent') return markLeadSent(payload.id, payload.emailedAt);
+  if (op === 'lead_delete') return deleteLead(payload.id);
   throw new Error(`unknown op ${op}`);
 }
 

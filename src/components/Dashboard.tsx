@@ -379,7 +379,7 @@ export function Dashboard({
           </div>
         </main>
       </div>
-      <FloatingChat />
+      <FloatingChat onNavigate={onNavigate} />
     </div>
   );
 }

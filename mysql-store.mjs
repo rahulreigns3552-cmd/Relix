@@ -94,3 +94,19 @@ export function writeDoc(rel, value) {
 export function docExists(rel) {
   return syncCall('exists', { rel });
 }
+
+export function saveChatLeads(leads) {
+  return syncCall('leads_save', { leads });
+}
+
+export function listPendingChatLeads() {
+  return syncCall('leads_pending', {});
+}
+
+export function markChatLeadSent(id, emailedAt) {
+  return syncCall('lead_mark_sent', { id, emailedAt });
+}
+
+export function deleteChatLead(id) {
+  return syncCall('lead_delete', { id });
+}

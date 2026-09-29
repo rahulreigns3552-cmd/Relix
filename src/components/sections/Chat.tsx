@@ -438,12 +438,14 @@ export function Chat() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const capturedLeadKey = useRef('');
   const name = useMemo(() => greetingName(), []);
 
   useEffect(() => {
     setThread(getLocalChat(projectId) || { messages: [], pendingReply: false });
     setText('');
     setAgentNotice('');
+    capturedLeadKey.current = '';
     inputRef.current?.focus();
   }, [projectId]);
 
@@ -466,6 +468,31 @@ export function Chat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [thread.messages.length, thread.pendingReply]);
+
+  useEffect(() => {
+    if (thread.pendingReply) return;
+    const messages = thread.messages || [];
+    const waiting: ChatMessage[] = [];
+    const pairs: { user: ChatMessage; assistant: ChatMessage }[] = [];
+    for (const message of messages) {
+      if (message.role === 'user') {
+        if (message.text?.trim()) waiting.push(message);
+        continue;
+      }
+      if (message.role === 'assistant' && waiting.length && message.text?.trim()) {
+        const user = waiting.shift();
+        if (user) pairs.push({ user, assistant: message });
+      }
+    }
+    if (waiting.length || pairs.length === 0) return;
+    const last = pairs[pairs.length - 1];
+    const key = `${projectId}:${last.user.id}:${last.assistant.id}`;
+    if (capturedLeadKey.current === key) return;
+    capturedLeadKey.current = key;
+    void api.captureChatLead(projectId).catch(() => {
+      if (capturedLeadKey.current === key) capturedLeadKey.current = '';
+    });
+  }, [thread, projectId]);
 
   async function askAgent(jobId?: string) {
     try {

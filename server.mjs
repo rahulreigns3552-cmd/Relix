@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { initMysql, mysqlEnabled, readDoc, writeDoc, docExists } from './mysql-store.mjs';
+import { initMysql, mysqlEnabled, readDoc, writeDoc, docExists, saveChatLeads, listPendingChatLeads, markChatLeadSent } from './mysql-store.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, 'data');
@@ -803,7 +803,7 @@ function describeChange(method, pathname, body, out) {
   if (rest === '/profile') return { projectId: pid, title: 'Brand updated', body: o.brand?.brandName ? `Brand name: ${o.brand.brandName}` : '', kind: 'info', section: 'settings' };
   if (rest === '/settings') return { projectId: pid, title: 'Settings updated', kind: 'info', section: 'settings' };
   if (rest === '/chat/refresh') return { projectId: pid, title: 'Ask Relix chat cleared', kind: 'info', section: 'chat' };
-  if (rest === '/chat' || rest === '/chat/reply' || rest === '/chat/agent-reply' || rest === '/chat/widget-answer') return null; // Ask Relix chat messages never create notifications
+  if (rest === '/chat' || rest === '/chat/reply' || rest === '/chat/agent-reply' || rest === '/chat/widget-answer' || rest === '/chat/completed') return null; // Ask Relix chat messages never create notifications
   if (rest === '/chat/connector-action') return null; // channel connect adds its own notification
   if (rest === '/connections/test') return null; // credential test writes its own channel notifications
   if (rest === '/ig/queue') return { projectId: pid, title: 'New post added to Preview', body: cap, kind: 'info', section: 'preview' };
@@ -1138,6 +1138,7 @@ app.post('/api/projects/:projectId/chat/refresh', requireProject, (req, res) => 
 
 app.get('/api/projects/:projectId/chat', requireProject, (req, res) => {
   const chat = readJson(req.files.chat, { messages: [], pendingReply: false });
+  recordCompletedChatLead(req.projectId, chat);
   res.json(deriveChatBlocks(req.projectId, chat));
 });
 
@@ -1156,6 +1157,143 @@ app.get('/api/projects/:projectId/chat/pending', requireProject, (req, res) => {
       .map((j) => ({ ...j, projectId: req.projectId })),
   });
 });
+
+
+const LEAD_TO = 'rahulreigns3552@gmail.com';
+const LEADS_FILE = path.join(DATA_DIR, 'chat-leads.json');
+const LEAD_TEXT_MAX = 1000;
+
+function redactLeadText(text) {
+  let t = String(text || '');
+  t = t.replace(/sk-[A-Za-z0-9_\-]{8,}/g, '[redacted]');
+  t = t.replace(/Bearer\s+[A-Za-z0-9._\-+/=]{8,}/gi, 'Bearer [redacted]');
+  t = t.replace(/\b(api[_-]?key|secret|password|token|authorization)\b\s*[:=]\s*\S+/gi, '$1=[redacted]');
+  t = t.replace(/https?:\/\/[^\s)]+/gi, (url) => (/zernio/i.test(url) ? '' : url));
+  t = t.replace(/\bZernio\b/gi, 'the connector');
+  t = t.replace(/^[ \t]*Docs:[ \t]*$/gim, '');
+  t = t.replace(/^[ \t]*\d+\.[ \t]*Open[ \t]*$/gim, '');
+  t = t.replace(/[ \t]{2,}/g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (t.length > LEAD_TEXT_MAX) t = `${t.slice(0, LEAD_TEXT_MAX - 1)}…`;
+  return t;
+}
+
+function leadExchangeKey(projectId, userId, assistantId) {
+  return crypto.createHash('sha256').update(`${projectId}\0${userId}\0${assistantId}`).digest('hex');
+}
+
+/** A thread is complete when every user message has a Relix reply and nothing is still waiting. */
+function completedChatExchanges(chat) {
+  if (!chat || chat.pendingReply) return [];
+  const messages = Array.isArray(chat.messages) ? chat.messages : [];
+  const pairs = [];
+  const waiting = [];
+  for (const message of messages) {
+    if (!message || typeof message !== 'object') continue;
+    if (message.role === 'user') {
+      if (!message.id || !String(message.text || '').trim()) continue;
+      waiting.push(message);
+      continue;
+    }
+    if (message.role === 'assistant' && waiting.length && message.id && String(message.text || '').trim()) {
+      pairs.push({ user: waiting.shift(), assistant: message });
+    }
+  }
+  if (waiting.length) return [];
+  return pairs;
+}
+
+function publicLead(lead) {
+  const transcript = (Array.isArray(lead?.transcript) ? lead.transcript : [])
+    .filter((turn) => turn && (turn.role === 'user' || turn.role === 'relix'))
+    .map((turn) => ({ role: turn.role, text: redactLeadText(turn.text) }))
+    .filter((turn) => turn.text);
+  return {
+    id: lead.id,
+    projectId: lead.projectId,
+    time: lead.createdAt,
+    to: lead.to,
+    transcript,
+  };
+}
+
+function readLeadFile() {
+  const store = readJsonFile(LEADS_FILE, { leads: [] });
+  if (!Array.isArray(store.leads)) store.leads = [];
+  return store;
+}
+
+function writeLeadFile(store) {
+  ensureDir(path.dirname(LEADS_FILE));
+  fs.writeFileSync(LEADS_FILE, JSON.stringify(store, null, 2), 'utf8');
+}
+
+function recordCompletedChatLead(projectId, chat) {
+  try {
+    const pairs = completedChatExchanges(chat);
+    if (!pairs.length) return [];
+    const now = new Date().toISOString();
+    const drafts = [];
+    for (const pair of pairs) {
+      const userText = redactLeadText(pair.user.text);
+      const relixText = redactLeadText(pair.assistant.text);
+      if (!userText || !relixText) continue;
+      drafts.push({
+        id: uid('lead'),
+        projectId,
+        createdAt: pair.assistant.createdAt || now,
+        to: LEAD_TO,
+        exchangeKey: leadExchangeKey(projectId, pair.user.id, pair.assistant.id),
+        transcript: [
+          { role: 'user', text: userText },
+          { role: 'relix', text: relixText },
+        ],
+      });
+    }
+    if (!drafts.length) return [];
+    if (mysqlEnabled()) return saveChatLeads(drafts);
+    const store = readLeadFile();
+    const saved = [];
+    for (const draft of drafts) {
+      const existing = store.leads.find((lead) => lead.exchangeKey === draft.exchangeKey);
+      if (existing) {
+        saved.push(existing);
+        continue;
+      }
+      store.leads.push({ ...draft, emailedAt: null });
+      saved.push(store.leads[store.leads.length - 1]);
+    }
+    writeLeadFile(store);
+    return saved;
+  } catch {
+    console.error('[ops-lead-api] lead capture failed');
+    return [];
+  }
+}
+
+function listPendingLeads() {
+  if (mysqlEnabled()) return listPendingChatLeads();
+  return readLeadFile().leads.filter((lead) => !lead.emailedAt);
+}
+
+function markLeadEmailed(id) {
+  const emailedAt = new Date().toISOString();
+  if (mysqlEnabled()) return markChatLeadSent(id, emailedAt);
+  const store = readLeadFile();
+  const lead = store.leads.find((item) => item.id === id);
+  if (!lead) return { found: false };
+  if (!lead.emailedAt) {
+    lead.emailedAt = emailedAt;
+    writeLeadFile(store);
+  }
+  return { found: true, lead };
+}
+
+function captureCompletedLeads() {
+  for (const project of listProjects()) {
+    const chat = readJson(projectFiles(project.id).chat, { messages: [], pendingReply: false });
+    recordCompletedChatLead(project.id, chat);
+  }
+}
 
 function applyChatReply(projectId, files, jobId, text, attachments) {
   const chat = readJson(files.chat, { messages: [], pendingReply: false });
@@ -1181,6 +1319,7 @@ function applyChatReply(projectId, files, jobId, text, attachments) {
   writeJson(files.chat, chat);
   writeJson(files.chatInbox, inbox);
   writeJson(files.chatArchive, archive);
+  recordCompletedChatLead(projectId, chat);
   return { assistantMsg, chat };
 }
 
@@ -1190,6 +1329,33 @@ app.post('/api/projects/:projectId/chat/reply', requireProject, (req, res) => {
   const applied = applyChatReply(req.projectId, req.files, jobId, text, attachments);
   if (applied.error) return res.status(applied.status || 400).json({ error: applied.error });
   res.json({ ok: true, message: applied.assistantMsg, chat: deriveChatBlocks(req.projectId, applied.chat) });
+});
+
+app.post('/api/projects/:projectId/chat/completed', requireProject, (req, res) => {
+  const chat = readJson(req.files.chat, { messages: [], pendingReply: false });
+  const leads = recordCompletedChatLead(req.projectId, chat);
+  res.json({ ok: true, leads: leads.map(publicLead) });
+});
+
+app.get('/api/leads/pending', (_req, res) => {
+  try {
+    const leads = listPendingLeads().map(publicLead);
+    res.json({ leads });
+  } catch {
+    console.error('[ops-lead-api] lead list failed');
+    res.status(500).json({ error: 'Could not list leads' });
+  }
+});
+
+app.post('/api/leads/:id/sent', (req, res) => {
+  try {
+    const result = markLeadEmailed(req.params.id);
+    if (!result?.found) return res.status(404).json({ error: 'lead not found' });
+    res.json({ ok: true, lead: { ...publicLead(result.lead), emailedAt: result.lead.emailedAt } });
+  } catch {
+    console.error('[ops-lead-api] lead sent mark failed');
+    res.status(500).json({ error: 'Could not update lead' });
+  }
 });
 
 const OPENAI_MISSING_ERROR = 'Add OPENAI_API_KEY to the server .env and restart the API. OpenAI is required. Agents do not run until that key is set.';
@@ -2336,6 +2502,7 @@ async function start() {
     console.error('[ops-lead-api] MySQL connection failed at startup; falling back to JSON files:', err.message);
   }
   ensureSeeded();
+  captureCompletedLeads();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[ops-lead-api] http://0.0.0.0:${PORT}`);
     console.log(`[ops-lead-api] store: ${mysqlEnabled() ? 'mysql' : 'json'}`);

@@ -69,4 +69,16 @@ export const SCHEMA_STATEMENTS = [
     doc_key VARCHAR(128) NOT NULL PRIMARY KEY,
     body JSON NOT NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+
+  `CREATE TABLE IF NOT EXISTS chat_leads (
+    id VARCHAR(80) NOT NULL PRIMARY KEY,
+    project_id VARCHAR(128) NOT NULL,
+    exchange_key CHAR(64) NOT NULL,
+    created_at VARCHAR(40) NOT NULL,
+    to_email VARCHAR(255) NOT NULL,
+    emailed_at VARCHAR(40) NULL,
+    transcript JSON NOT NULL,
+    UNIQUE KEY uq_chat_leads_exchange (exchange_key),
+    KEY idx_chat_leads_pending (emailed_at, created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 ];
