@@ -1,0 +1,40 @@
+{
+  "jobs": [
+    {
+      "id": "refresh-1790256100102-ygaaim",
+      "type": "chat-refresh",
+      "projectId": "mista",
+      "clearedAt": "2026-09-24T13:21:40.102Z",
+      "messageCount": 2,
+      "pendingJobs": [
+        {
+          "id": "job-1790255998457-eez3bc",
+          "text": "Hi",
+          "messageId": "msg-1790255998457-62cius",
+          "projectId": "mista",
+          "createdAt": "2026-09-24T13:19:58.457Z",
+          "status": "cancelled",
+          "cancelledAt": "2026-09-24T13:21:40.102Z"
+        }
+      ]
+    },
+    {
+      "id": "job-1790255998457-eez3bc",
+      "text": "Hi",
+      "messageId": "msg-1790255998457-62cius",
+      "projectId": "mista",
+      "createdAt": "2026-09-24T13:19:58.457Z",
+      "status": "cancelled",
+      "cancelledAt": "2026-09-24T13:21:40.102Z"
+    },
+    {
+      "id": "job-1790588487303-8pi322",
+      "text": "give me a linkedin connector to add",
+      "messageId": "msg-1790588487303-edb3dg",
+      "projectId": "mista",
+      "createdAt": "2026-09-28T09:41:27.303Z",
+      "status": "done",
+      "repliedAt": "2026-09-28T09:43:50.104Z"
+    }
+  ]
+}

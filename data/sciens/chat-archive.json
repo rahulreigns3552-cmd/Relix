@@ -1,0 +1,13 @@
+{
+  "jobs": [
+    {
+      "id": "job-1790169819315-h0t7jr",
+      "text": "Sciens-only smoke message",
+      "messageId": "msg-1790169819315-x1c9jb",
+      "projectId": "sciens",
+      "createdAt": "2026-09-23T13:23:39.315Z",
+      "status": "done",
+      "repliedAt": "2026-09-23T13:24:13.834Z"
+    }
+  ]
+}

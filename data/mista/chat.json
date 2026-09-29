@@ -1,0 +1,65 @@
+{
+  "messages": [
+    {
+      "id": "msg-1790256100102-rv59j6",
+      "role": "assistant",
+      "text": "Hi — I am Relix for Mista. Ask me anything about this project.",
+      "attachments": [],
+      "createdAt": "2026-09-24T13:21:40.102Z"
+    },
+    {
+      "id": "msg-1790588487303-edb3dg",
+      "role": "user",
+      "text": "give me a linkedin connector to add",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:41:27.303Z"
+    },
+    {
+      "id": "msg-1790588630104-3t6ze2",
+      "role": "assistant",
+      "text": "Here's a LinkedIn connector for Mista. Tap Add — I'll connect it via Zernio so you can schedule and publish LinkedIn posts. If you haven't saved a LinkedIn URL in Channels yet, you can paste it right on the card.",
+      "attachments": [
+        {
+          "type": "connector",
+          "connector": {
+            "id": "zernio-linkedin",
+            "name": "Zernio",
+            "description": "Schedule, publish and analyse LinkedIn posts for Mista",
+            "action": "connect_channel",
+            "status": "needs_url",
+            "logoUrl": "/media/connectors/zernio.svg",
+            "tools": 52,
+            "platform": "linkedin",
+            "actedAt": "2026-09-28T09:44:02.558Z",
+            "error": null
+          }
+        },
+        {
+          "type": "widget",
+          "widget": {
+            "id": "confirm-linkedin-help",
+            "prompt": "Need help finding your LinkedIn company page URL?",
+            "options": [
+              {
+                "label": "I'm good",
+                "value": "I'm good with the LinkedIn connector",
+                "style": "primary"
+              },
+              {
+                "label": "Show me how",
+                "value": "Show me how to find my LinkedIn URL",
+                "style": "default"
+              }
+            ],
+            "allowCustom": false,
+            "answered": null,
+            "helpText": "You can also paste any LinkedIn profile or page URL in Settings → Channels."
+          }
+        }
+      ],
+      "createdAt": "2026-09-28T09:43:50.105Z",
+      "jobId": "job-1790588487303-8pi322"
+    }
+  ],
+  "pendingReply": false
+}

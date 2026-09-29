@@ -1,0 +1,52 @@
+[
+  {
+    "id": "sanctum",
+    "name": "Sanctum",
+    "description": "Quiet luxury lifestyle brand \u2014 ritual, warmth, intentional living.",
+    "createdAt": "2026-09-23T00:00:00.000Z",
+    "ownerEmail": "admin@opslead.app"
+  },
+  {
+    "id": "sciens",
+    "name": "Sciens",
+    "description": "Science-forward product brand \u2014 clarity, evidence, modern craft.",
+    "createdAt": "2026-09-23T00:00:00.000Z",
+    "ownerEmail": "admin@opslead.app"
+  },
+  {
+    "id": "northstar-labs",
+    "name": "Northstar Labs",
+    "description": "Grow my brand \u2014 SaaS",
+    "website": "northstar.example",
+    "industry": "SaaS",
+    "createdAt": "2026-09-24T08:10:34.252Z",
+    "ownerEmail": "testuser@example.com"
+  },
+  {
+    "id": "orbit-studio",
+    "name": "Orbit Studio",
+    "description": "Creative studio",
+    "website": "",
+    "industry": "",
+    "createdAt": "2026-09-24T08:10:34.263Z",
+    "ownerEmail": "testuser@example.com"
+  },
+  {
+    "id": "pulse-media",
+    "name": "Pulse Media",
+    "description": "Create social media content \u2014 Media",
+    "website": "",
+    "industry": "Media",
+    "createdAt": "2026-09-24T08:12:40.586Z",
+    "ownerEmail": "verify.relix+202609241341@example.com"
+  },
+  {
+    "id": "mista",
+    "name": "Mista",
+    "description": "Grow my brand \u2014 Fitness",
+    "website": "mistalife.com",
+    "industry": "Fitness",
+    "createdAt": "2026-09-24T10:24:52.520Z",
+    "ownerEmail": "rahulreigns3552@gmail.com"
+  }
+]

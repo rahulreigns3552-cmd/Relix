@@ -1,0 +1,39 @@
+{
+  "channelId": "eb89cea3-10de-4461-a7ef-657cd49b47ec",
+  "channelName": "Pulse Media",
+  "agents": [
+    {
+      "id": "baa71ff6-7f1b-41b6-a48f-551867c03c62",
+      "name": "Pulse Content",
+      "role": "Content Creation"
+    },
+    {
+      "id": "26b77358-b37b-485b-a1eb-421684c7a072",
+      "name": "Pulse Creative",
+      "role": "Creative/Image"
+    },
+    {
+      "id": "676baa81-225b-480c-b9e8-3ea4956d31ae",
+      "name": "Pulse Video",
+      "role": "Video"
+    },
+    {
+      "id": "d1739d54-34f8-4706-9119-83fd849a5754",
+      "name": "Pulse Strategy",
+      "role": "Strategy & Calendar"
+    },
+    {
+      "id": "8d0329c7-8fd4-462c-8d02-7456d0d0455c",
+      "name": "Pulse Publishing",
+      "role": "Publishing"
+    },
+    {
+      "id": "2671cbb4-21e7-474e-8cf9-a038e145b279",
+      "name": "Pulse Analytics",
+      "role": "Analytics"
+    }
+  ],
+  "goal": "Create social media content",
+  "businessName": "Pulse Media",
+  "provisionedAt": "2026-09-24T08:13:30.096Z"
+}

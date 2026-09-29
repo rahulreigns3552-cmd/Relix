@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "email": "admin@opslead.app",
+      "passwordHash": "e1f291581f7d875bea47d3440b8d603f:7eb6ddf1760888fea347bba1386338b1c71bba042ae70cd4b5e3a38a4c32f07a2afb172a7b2d6c2c3ae0e228cc640c3927956528fe4e750d6dd15f71a2e63d4b",
+      "createdAt": "2026-09-24T08:10:33.570Z"
+    },
+    {
+      "email": "testuser@example.com",
+      "passwordHash": "336ec2708ecb061442f47b520f8724ed:cbf1cbfba34bb8c4edc5e7ef105743fad11e0701f13e7936aa8910c885265838d4dfa33db366dbe94b046cec40eac5f9617373afb9b39d15a7447434a71c6d16",
+      "createdAt": "2026-09-24T08:10:34.232Z"
+    },
+    {
+      "email": "verify.relix+202609241341@example.com",
+      "passwordHash": "4a8900f7119e0524b9a570a99a080b5e:1afe47dd9e0536aecefb5d80eae57b26ff38ce567feadd0eb7bb0485b5679a96e38a976755c95862c302cd1603eef27a5a09f3cc35b2ba12e96177b1c27edffa",
+      "createdAt": "2026-09-24T08:12:08.942Z"
+    },
+    {
+      "email": "rahulreigns3552@gmail.com",
+      "passwordHash": "6ae8c3ab355606635cf4c576b771f6a8:10440ff222f31da8dee5342e42f98274e9a032ea44d58aea3f9915279d03815c482c8dfc54724512db92d4f0d7b36493c5e353bd66621c075abaf5178729009a",
+      "createdAt": "2026-09-24T10:23:47.586Z"
+    }
+  ]
+}

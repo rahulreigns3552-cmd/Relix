@@ -1,0 +1,155 @@
+{
+  "items": [
+    {
+      "id": "ig-1790653812015-polqrt",
+      "platform": "instagram",
+      "imageUrl": "/media/sanctum-SAN-W2-TUE-0930-v2.png",
+      "caption": "EU AI Act dates moved.\n\nLogging, documentation, and human oversight didn't get optional.\n\nThat's the useful reading for banks and fintechs \u2014 not a race to stamp \"AI Act compliant\" on a landing page (we won't; you shouldn't trust vendors who do without proof).\n\nPractical posture for governance teams:\n\n\u2022 Treat evidence as the product: prompts, retrieved context, model versions, actions, approvers\n\u2022 Watch RBI draft MRM (Jun 2026) as a board signal on AI/ML and third-party models \u2014 prepare exportable artifacts, don't wait for a logo seal\n\u2022 For UAE LFIs: inventory, oversight, and clear data paths remain the conversation (CBUAE AI/ML guidance discourse \u2014 not a Sanctum \"approval\" claim)\n\nWe are not saying Sanctum makes you compliant with the EU AI Act, RBI, or CBUAE. We are saying: if your GenAI path can't show an audit trail you can export, the next regulatory or board cycle will ask why.\n\nStart with a risk-scored Assess on one high-impact workflow. Build the evidence habit before the pilot hardens the wrong architecture.\n\n\u2192 Start Assess\nProduct: https://www.sanctumai.us\n\nThis post is informational, not legal advice. Cite primary regulatory texts via your counsel / compliance library.",
+      "hashtags": [
+        "#AIGovernance",
+        "#PrivateAI",
+        "#BankingAI",
+        "#Sanctum",
+        "#FinTech",
+        "#DataSovereignty"
+      ],
+      "status": "pending",
+      "feedback": null,
+      "calendarPostId": "SAN-W2-TUE-0930",
+      "expiresAt": "2026-10-01T04:30:00.000Z",
+      "createdAt": "2026-09-29T03:50:12.015Z",
+      "updatedAt": "2026-09-29T03:50:12.015Z",
+      "postDate": "2026-09-30",
+      "approvalEmail": {
+        "threadId": "1a0eb582e6361eba",
+        "messageId": "1a0eb582e6361eba",
+        "to": "porandlarahul03@gmail.com",
+        "sentAt": "2026-09-29T04:07:05.777Z"
+      }
+    },
+    {
+      "id": "ig-1790579880300-0atphf",
+      "platform": "instagram",
+      "imageUrl": "/media/sanctum-SAN-W2-MON-0929-v5.png",
+      "caption": "KYC packages should never train someone else's model.\n\nID docs, address proofs, corporate packs, adverse-media notes \u2014 that's customer data and bank process knowledge. Pasting it into a public or loosely governed GenAI path is not \"productivity.\" It's a control failure waiting for the next incident review.\n\nBanks don't need another generic chatbot. They need a banking-first path for document intelligence:\n\n\u2022 KYC / onboarding packages inside your boundary\n\u2022 Human review in the loop \u2014 as a feature, not a disclaimer\n\u2022 Exportable trail: what was asked, what was retrieved, which model version, who approved\n\nSanctum Assess starts with one problem. For many mid-market banks and NBFCs, that problem is KYC docs.\n\nTwo weeks. Scored. Then Prove on your data \u2014 or walk away with a clearer boundary story.\n\n\u2192 Assess (KYC docs)\nProduct: https://www.sanctumai.us",
+      "hashtags": [
+        "#KYC",
+        "#PrivateAI",
+        "#BankingAI",
+        "#Sanctum",
+        "#FinTech",
+        "#DataSovereignty"
+      ],
+      "status": "published",
+      "feedback": null,
+      "calendarPostId": "SAN-W2-MON-0929",
+      "expiresAt": "2026-09-30T04:30:00.000Z",
+      "createdAt": "2026-09-28T07:18:00.300Z",
+      "updatedAt": "2026-09-29T04:45:00.000Z",
+      "postDate": "2026-09-29",
+      "changesVia": "relix",
+      "lastFeedback": "no you didn't follow our logo and sanctum box following those create image for the post and give it for preview.",
+      "revision": 5,
+      "pastApprovalEmails": [
+        {
+          "threadId": "1a0e6e77400459a3",
+          "messageId": "1a0e6e77400459a3",
+          "to": "porandlarahul03@gmail.com",
+          "sentAt": "2026-09-28T07:25:29.759Z"
+        }
+      ],
+      "approvedAt": "2026-09-28T08:01:14.646Z",
+      "approvedVia": "relix",
+      "approvalEmail": {
+        "threadId": "1a0e711a36d8a1bb",
+        "messageId": "1a0e711a36d8a1bb",
+        "to": "porandlarahul03@gmail.com",
+        "sentAt": "2026-09-28T08:11:37.222Z"
+      },
+      "zernioPostId": "6aba214cff91c4efbe4830e4",
+      "scheduledFor": "2026-09-29T04:39:00.000Z",
+      "publishedAt": "2026-09-29T04:39:55.296Z"
+    },
+    {
+      "id": "ig-1790328019453-t4me50",
+      "platform": "instagram",
+      "imageUrl": "/media/sanctum-SAN-W1-SAT-0926-v2.png",
+      "caption": "Prove it on your data. Inside your perimeter.\n\nAssess told you which problem is worth solving. Prove shows it works \u2014 on your documents, under your access rules, on the Sanctum appliance inside your own network.\n\n\u2022 Weeks 3\u20136: one use case, running on your real data\n\u2022 Measured against the Assess scorecard, not a demo script\n\u2022 Nothing leaves your perimeter\n\u2022 A clear go or stop, backed by evidence your Security and Risk teams can check\n\nBuilt for regulated banking and fintech teams who need proof, not promises.\n\nOwn Your AI. Protect Your Data.\n\nProduct: https://www.sanctumai.us",
+      "hashtags": [
+        "#PrivateAI",
+        "#BankingAI",
+        "#DataSovereignty",
+        "#AIGovernance",
+        "#Sanctum",
+        "#FinTech"
+      ],
+      "status": "published",
+      "feedback": null,
+      "calendarPostId": "SAN-W1-SAT-0926",
+      "expiresAt": "2026-09-27T04:30:00.000Z",
+      "createdAt": "2026-09-25T09:20:19.452Z",
+      "updatedAt": "2026-09-25T09:45:02.631Z",
+      "postDate": "2026-09-26",
+      "changesVia": "relix",
+      "lastFeedback": "Change the image don't show too much content on left side",
+      "revision": 2,
+      "pastApprovalEmails": [
+        {
+          "threadId": "1a0d7e0325c116f9",
+          "messageId": "1a0d7e05bd966ff3",
+          "to": "porandlarahul03@gmail.com",
+          "sentAt": "2026-09-25T09:23:26.367Z"
+        }
+      ],
+      "approvedAt": "2026-09-25T09:39:04.043Z",
+      "approvedVia": "relix",
+      "zernioPostId": "6ab64292dd4d05b53983d167",
+      "scheduledFor": "2026-09-26T04:39:00.000Z",
+      "publishedAt": "2026-09-26T04:41:00.000Z"
+    },
+    {
+      "id": "ig-san-w1-fri-0926",
+      "platform": "instagram",
+      "imageUrl": "/media/sanctum-SAN-W1-FRI-0926.png",
+      "caption": "Two weeks. One problem. Scored Assess \u2014 not a deck.\n\nMost \u201cAI discovery\u201d workshops end the same way: a roadmap PDF, three vendors, zero decision on data boundary.\n\nSanctum Assess is productized on purpose:\n\u2022 One high-value problem (e.g. KYC docs, loan packages, policy search)\n\u2022 ~Two weeks \u2014 boundary, readiness, and scorecard you can take to Security and Architecture\n\u2022 Clear next step: Prove on your data inside your perimeter \u2014 or stop with evidence, not opinions\n\nBuilt for regulated banking and fintech teams who are done with pilots that can\u2019t survive the control review.\n\nOwn Your AI. Protect Your Data.\n\n\u2192 Start Assess\nProduct: https://www.sanctumai.us",
+      "hashtags": [
+        "#PrivateAI",
+        "#BankingInnovation",
+        "#DigitalBanking",
+        "#AIStrategy",
+        "#Sanctum",
+        "#FinTech"
+      ],
+      "status": "published",
+      "feedback": null,
+      "calendarPostId": "SAN-W1-FRI-0926",
+      "postDate": "2026-09-25",
+      "expiresAt": null,
+      "createdAt": "2026-09-24T06:30:00.000Z",
+      "updatedAt": "2026-09-25T05:11:07.196413Z",
+      "zernioPostId": "6ab5fb11086c0ff88db2bbb2",
+      "publishedAt": "2026-09-25T04:40:08.960Z"
+    },
+    {
+      "id": "ig-san-w1-thu-0925",
+      "platform": "instagram",
+      "imageUrl": "/media/sanctum-SAN-W1-THU-0925.png",
+      "caption": "Can you export every prompt, retrieved passage, and model version?\n\nIf the answer is \u201cthe vendor has logs\u201d or \u201cit\u2019s in the SIEM somewhere,\u201d model risk and internal audit will keep blocking production \u2014 even when the demo looked fine.\n\nFor credit, KYC, and policy copilots, governance needs artifacts you can hand over, not a slide that says \u201cauditable.\u201d\n\nMinimum fields worth insisting on:\n\u2022 Prompt (what was asked)\n\u2022 Retrieved passage (what the system used)\n\u2022 Model version (what answered)\n\u2022 Action taken (what changed in the workflow)\n\u2022 Approver / human review (who signed off)\n\nSanctum is designed so those fields are exportable \u2014 immutable audit as a product behavior, not a brochure claim. We don\u2019t invent SOC 2 seals or \u201cRBI-approved\u201d badges. We show you what the trail records.\n\nIf you\u2019re preparing for board or MRM questions on third-party GenAI, let\u2019s walk the evidence pack on your problem.\n\n\u2192 Prove / talk to us\nProduct: https://www.sanctumai.us",
+      "hashtags": [
+        "#ModelRisk",
+        "#AIGovernance",
+        "#AuditTrail",
+        "#Compliance",
+        "#BankingRisk",
+        "#PrivateAI",
+        "#Sanctum"
+      ],
+      "status": "published",
+      "feedback": null,
+      "calendarPostId": "SAN-W1-THU-0925",
+      "postDate": "2026-09-24",
+      "createdAt": "2026-09-24T04:00:00.000Z",
+      "updatedAt": "2026-09-24T04:47:03.000Z"
+    }
+  ]
+}

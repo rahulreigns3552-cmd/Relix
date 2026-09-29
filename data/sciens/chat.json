@@ -1,0 +1,27 @@
+{
+  "messages": [
+    {
+      "id": "msg-1790169785312-4ropv5",
+      "role": "assistant",
+      "text": "Hi — I am Relix for Sciens. Ask me anything about science-forward messaging, product content, or Instagram drafts for this project.",
+      "attachments": [],
+      "createdAt": "2026-09-23T13:23:05.312Z"
+    },
+    {
+      "id": "msg-1790169819315-x1c9jb",
+      "role": "user",
+      "text": "Sciens-only smoke message",
+      "attachments": [],
+      "createdAt": "2026-09-23T13:23:39.315Z"
+    },
+    {
+      "id": "msg-1790169853834-09cj3q",
+      "role": "assistant",
+      "text": "Sciens project is ready. This chat and all workflows here stay isolated from Sanctum.",
+      "attachments": [],
+      "createdAt": "2026-09-23T13:24:13.834Z",
+      "jobId": "job-1790169819315-h0t7jr"
+    }
+  ],
+  "pendingReply": false
+}

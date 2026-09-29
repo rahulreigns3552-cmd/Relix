@@ -1,0 +1,71 @@
+{
+  "jobs": [
+    {
+      "id": "job-1790160207694-evmbnb",
+      "text": "Smoke test hello",
+      "messageId": "msg-1790160207694-1vgdh5",
+      "createdAt": "2026-09-23T10:43:27.694Z",
+      "status": "done",
+      "repliedAt": "2026-09-23T10:43:34.367Z"
+    },
+    {
+      "id": "job-1790160548055-x5xj8q",
+      "text": "hello test",
+      "messageId": "msg-1790160548055-x5p8h4",
+      "createdAt": "2026-09-23T10:49:08.055Z",
+      "status": "done",
+      "repliedAt": "2026-09-23T10:51:13.750Z"
+    },
+    {
+      "id": "job-1790160647249-bbi2rx",
+      "text": "hello test",
+      "messageId": "msg-1790160647248-69mbfh",
+      "createdAt": "2026-09-23T10:50:47.249Z",
+      "status": "done",
+      "repliedAt": "2026-09-23T10:51:13.759Z"
+    },
+    {
+      "id": "job-1790160747278-cxly1t",
+      "text": "i need logo for my business The business name is verch technologies.",
+      "messageId": "msg-1790160747277-krjiry",
+      "createdAt": "2026-09-23T10:52:27.278Z",
+      "status": "done",
+      "repliedAt": "2026-09-23T10:56:28.455Z"
+    },
+    {
+      "id": "job-1790169807620-hubrq0",
+      "text": "Smoke test from Sanctum isolation check",
+      "messageId": "msg-1790169807620-myt3mm",
+      "projectId": "sanctum",
+      "createdAt": "2026-09-23T13:23:27.620Z",
+      "status": "done",
+      "repliedAt": "2026-09-23T13:23:56.763Z"
+    },
+    {
+      "id": "refresh-1790313376214-86jdji",
+      "type": "chat-refresh",
+      "projectId": "sanctum",
+      "clearedAt": "2026-09-25T05:16:16.214Z",
+      "messageCount": 11,
+      "pendingJobs": []
+    },
+    {
+      "id": "job-1790585014221-mmgzh1",
+      "text": "give me a free connector link for linkedin",
+      "messageId": "msg-1790585014221-r1g8j3",
+      "projectId": "sanctum",
+      "createdAt": "2026-09-28T08:43:34.221Z",
+      "status": "done",
+      "repliedAt": "2026-09-28T08:51:03.070Z"
+    },
+    {
+      "id": "job-1790587946966-vo2169",
+      "text": "give me the connector to add",
+      "messageId": "msg-1790587946965-ixuwfc",
+      "projectId": "sanctum",
+      "createdAt": "2026-09-28T09:32:26.966Z",
+      "status": "done",
+      "repliedAt": "2026-09-28T09:37:48.649Z"
+    }
+  ]
+}

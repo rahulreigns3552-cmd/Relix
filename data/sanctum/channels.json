@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "platform": "instagram",
+      "url": "https://www.instagram.com/switchonenergy03/",
+      "status": "connected",
+      "message": "Connected via Zernio",
+      "connector": "Zernio",
+      "connectUrl": null,
+      "accountId": "6ab237a58d284ffb212bc988",
+      "updatedAt": "2026-09-28T08:50:00.000Z"
+    },
+    {
+      "platform": "whatsapp",
+      "url": "https://wa.me/918106360303",
+      "status": "connected",
+      "message": "Connected via Zernio (+91 81063 60303)",
+      "connector": "Zernio",
+      "connectUrl": null,
+      "accountId": "6ab23d3a8d284ffb212be174",
+      "updatedAt": "2026-09-28T08:50:00.000Z"
+    },
+    {
+      "platform": "email",
+      "url": "rahulreigns3552@gmail.com",
+      "status": "connected",
+      "message": "Connected via Gmail",
+      "connector": "Gmail",
+      "connectUrl": null,
+      "accountId": "rahulreigns3552@gmail.com",
+      "updatedAt": "2026-09-28T08:49:56.000Z"
+    }
+  ]
+}

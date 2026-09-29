@@ -1,0 +1,39 @@
+{
+  "channelId": "404d2f20-8a76-4701-b337-cc0dd9a8e0a8",
+  "channelName": "Mista",
+  "agents": [
+    {
+      "id": "c1e27f21-c2c1-4d01-98da-66231ac9b7e8",
+      "name": "Mista Strategy",
+      "role": "Strategy & Calendar"
+    },
+    {
+      "id": "b7c1ba97-7a4e-4e01-8f72-b2f86d39b725",
+      "name": "Mista Content",
+      "role": "Content Creation"
+    },
+    {
+      "id": "cc5bcb8c-f0cb-47db-a51d-43b876391d59",
+      "name": "Mista Creative",
+      "role": "Creative/Image"
+    },
+    {
+      "id": "84de4f02-b775-44f2-9b4c-db4c16614e7c",
+      "name": "Mista Publishing",
+      "role": "Publishing"
+    },
+    {
+      "id": "22a3bc0e-88d3-425c-8a6f-17a650c08b5d",
+      "name": "Mista Analytics",
+      "role": "Analytics"
+    },
+    {
+      "id": "f99b227a-b08e-47af-ac2f-c3b0145759cf",
+      "name": "Mista Marketing",
+      "role": "Marketing Manager"
+    }
+  ],
+  "goal": "Grow my brand",
+  "businessName": "Mista",
+  "provisionedAt": "2026-09-24T10:28:40.683Z"
+}

@@ -1,0 +1,39 @@
+{
+  "channelId": "74e785a7-b7ad-4632-812c-1a4874ad9450",
+  "channelName": "Northstar Labs",
+  "agents": [
+    {
+      "id": "7ce2cdc3-32d2-4c05-8af1-65dd420e0311",
+      "name": "Northstar Strategy",
+      "role": "Strategy & Calendar"
+    },
+    {
+      "id": "0810831c-556d-42bc-b4e0-ba8fe6674504",
+      "name": "Northstar Content",
+      "role": "Content Creation"
+    },
+    {
+      "id": "84eea458-71c6-46dc-81ab-4f5ca4c848b7",
+      "name": "Northstar Creative",
+      "role": "Creative/Image"
+    },
+    {
+      "id": "223aef80-fafc-45a5-86b5-ad6e86aebf60",
+      "name": "Northstar Publishing",
+      "role": "Publishing"
+    },
+    {
+      "id": "0d1018ca-161f-4d45-b162-fcb7642af76c",
+      "name": "Northstar Analytics",
+      "role": "Analytics"
+    },
+    {
+      "id": "b68ea6be-b638-4e80-bf64-d95e282ea6f6",
+      "name": "Northstar Marketing",
+      "role": "Marketing Manager"
+    }
+  ],
+  "goal": "Grow my brand",
+  "businessName": "Northstar Labs",
+  "provisionedAt": "2026-09-24T08:11:31.949Z"
+}

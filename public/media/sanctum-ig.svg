@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="50%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#FED7AA"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#g)"/>
+  <circle cx="820" cy="220" r="140" fill="rgba(255,255,255,0.18)"/>
+  <circle cx="200" cy="860" r="200" fill="rgba(255,255,255,0.12)"/>
+  <text x="540" y="500" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="700" fill="white">Sanctum</text>
+  <text x="540" y="580" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="32" fill="rgba(255,255,255,0.9)">Quiet luxury · Everyday ritual</text>
+</svg>

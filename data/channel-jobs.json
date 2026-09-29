@@ -1,0 +1,29 @@
+{
+  "jobs": [
+    {
+      "id": "chj-1790585919283-lbe4xw",
+      "projectId": "orbit-studio",
+      "platform": "linkedin",
+      "url": "https://www.linkedin.com/company/orbit/",
+      "status": "cancelled",
+      "createdAt": "2026-09-28T08:58:39.283Z",
+      "updatedAt": "2026-09-28T08:58:39.346Z"
+    },
+    {
+      "id": "chj-1790588735366-xly2rr",
+      "projectId": "mista",
+      "platform": "instagram",
+      "url": "https://www.instagram.com/cybersecuritytrain2026/",
+      "status": "failed",
+      "createdAt": "2026-09-28T09:45:35.366Z",
+      "result": {
+        "status": "failed",
+        "message": "Zernio needs a payment method to connect more than 2 accounts. Add billing in Zernio, then turn the Instagram toggle on again for @cybersecuritytrain2026.",
+        "connector": "Zernio",
+        "connectUrl": null,
+        "accountId": null
+      },
+      "completedAt": "2026-09-28T09:46:50.172Z"
+    }
+  ]
+}

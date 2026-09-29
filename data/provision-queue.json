@@ -1,0 +1,172 @@
+{
+  "jobs": [
+    {
+      "id": "prov-1790237434254-6ao5i0",
+      "status": "done",
+      "projectId": "northstar-labs",
+      "email": "testuser@example.com",
+      "goal": "Grow my brand",
+      "businessName": "Northstar Labs",
+      "website": "northstar.example",
+      "industry": "SaaS",
+      "teamSize": 6,
+      "note": "Team size capped at 6 agents (API channel max).",
+      "createdAt": "2026-09-24T08:10:34.254Z",
+      "agentIds": [
+        "7ce2cdc3-32d2-4c05-8af1-65dd420e0311",
+        "0810831c-556d-42bc-b4e0-ba8fe6674504",
+        "84eea458-71c6-46dc-81ab-4f5ca4c848b7",
+        "223aef80-fafc-45a5-86b5-ad6e86aebf60",
+        "0d1018ca-161f-4d45-b162-fcb7642af76c",
+        "b68ea6be-b638-4e80-bf64-d95e282ea6f6"
+      ],
+      "agents": [
+        {
+          "id": "7ce2cdc3-32d2-4c05-8af1-65dd420e0311",
+          "name": "Northstar Strategy",
+          "role": "Strategy & Calendar"
+        },
+        {
+          "id": "0810831c-556d-42bc-b4e0-ba8fe6674504",
+          "name": "Northstar Content",
+          "role": "Content Creation"
+        },
+        {
+          "id": "84eea458-71c6-46dc-81ab-4f5ca4c848b7",
+          "name": "Northstar Creative",
+          "role": "Creative/Image"
+        },
+        {
+          "id": "223aef80-fafc-45a5-86b5-ad6e86aebf60",
+          "name": "Northstar Publishing",
+          "role": "Publishing"
+        },
+        {
+          "id": "0d1018ca-161f-4d45-b162-fcb7642af76c",
+          "name": "Northstar Analytics",
+          "role": "Analytics"
+        },
+        {
+          "id": "b68ea6be-b638-4e80-bf64-d95e282ea6f6",
+          "name": "Northstar Marketing",
+          "role": "Marketing Manager"
+        }
+      ],
+      "channelId": "74e785a7-b7ad-4632-812c-1a4874ad9450",
+      "channelName": "Northstar Labs",
+      "completedAt": "2026-09-24T08:11:31.949Z"
+    },
+    {
+      "id": "prov-1790237560588-82d3hg",
+      "status": "done",
+      "projectId": "pulse-media",
+      "email": "verify.relix+202609241341@example.com",
+      "goal": "Create social media content",
+      "businessName": "Pulse Media",
+      "website": "",
+      "industry": "Media",
+      "teamSize": 6,
+      "note": "Team size capped at 6 agents (API channel max).",
+      "createdAt": "2026-09-24T08:12:40.588Z",
+      "agentIds": [
+        "baa71ff6-7f1b-41b6-a48f-551867c03c62",
+        "26b77358-b37b-485b-a1eb-421684c7a072",
+        "676baa81-225b-480c-b9e8-3ea4956d31ae",
+        "d1739d54-34f8-4706-9119-83fd849a5754",
+        "8d0329c7-8fd4-462c-8d02-7456d0d0455c",
+        "2671cbb4-21e7-474e-8cf9-a038e145b279"
+      ],
+      "agents": [
+        {
+          "id": "baa71ff6-7f1b-41b6-a48f-551867c03c62",
+          "name": "Pulse Content",
+          "role": "Content Creation"
+        },
+        {
+          "id": "26b77358-b37b-485b-a1eb-421684c7a072",
+          "name": "Pulse Creative",
+          "role": "Creative/Image"
+        },
+        {
+          "id": "676baa81-225b-480c-b9e8-3ea4956d31ae",
+          "name": "Pulse Video",
+          "role": "Video"
+        },
+        {
+          "id": "d1739d54-34f8-4706-9119-83fd849a5754",
+          "name": "Pulse Strategy",
+          "role": "Strategy & Calendar"
+        },
+        {
+          "id": "8d0329c7-8fd4-462c-8d02-7456d0d0455c",
+          "name": "Pulse Publishing",
+          "role": "Publishing"
+        },
+        {
+          "id": "2671cbb4-21e7-474e-8cf9-a038e145b279",
+          "name": "Pulse Analytics",
+          "role": "Analytics"
+        }
+      ],
+      "channelId": "eb89cea3-10de-4461-a7ef-657cd49b47ec",
+      "channelName": "Pulse Media",
+      "completedAt": "2026-09-24T08:13:30.096Z"
+    },
+    {
+      "id": "prov-1790245492521-8hwvxz",
+      "status": "done",
+      "projectId": "mista",
+      "email": "rahulreigns3552@gmail.com",
+      "goal": "Grow my brand",
+      "businessName": "Mista",
+      "website": "mistalife.com",
+      "industry": "Fitness",
+      "teamSize": 6,
+      "note": "Team size capped at 6 agents (API channel max).",
+      "createdAt": "2026-09-24T10:24:52.521Z",
+      "agentIds": [
+        "c1e27f21-c2c1-4d01-98da-66231ac9b7e8",
+        "b7c1ba97-7a4e-4e01-8f72-b2f86d39b725",
+        "cc5bcb8c-f0cb-47db-a51d-43b876391d59",
+        "84de4f02-b775-44f2-9b4c-db4c16614e7c",
+        "22a3bc0e-88d3-425c-8a6f-17a650c08b5d",
+        "f99b227a-b08e-47af-ac2f-c3b0145759cf"
+      ],
+      "agents": [
+        {
+          "id": "c1e27f21-c2c1-4d01-98da-66231ac9b7e8",
+          "name": "Mista Strategy",
+          "role": "Strategy & Calendar"
+        },
+        {
+          "id": "b7c1ba97-7a4e-4e01-8f72-b2f86d39b725",
+          "name": "Mista Content",
+          "role": "Content Creation"
+        },
+        {
+          "id": "cc5bcb8c-f0cb-47db-a51d-43b876391d59",
+          "name": "Mista Creative",
+          "role": "Creative/Image"
+        },
+        {
+          "id": "84de4f02-b775-44f2-9b4c-db4c16614e7c",
+          "name": "Mista Publishing",
+          "role": "Publishing"
+        },
+        {
+          "id": "22a3bc0e-88d3-425c-8a6f-17a650c08b5d",
+          "name": "Mista Analytics",
+          "role": "Analytics"
+        },
+        {
+          "id": "f99b227a-b08e-47af-ac2f-c3b0145759cf",
+          "name": "Mista Marketing",
+          "role": "Marketing Manager"
+        }
+      ],
+      "channelId": "404d2f20-8a76-4701-b337-cc0dd9a8e0a8",
+      "channelName": "Mista",
+      "completedAt": "2026-09-24T10:28:40.683Z"
+    }
+  ]
+}

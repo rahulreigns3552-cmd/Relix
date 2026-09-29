@@ -1,0 +1,235 @@
+{
+  "actions": [
+    {
+      "id": "iga-1790160214408-cyq0kp",
+      "postId": "ig-1790160204615-lz4ach",
+      "action": "revise",
+      "status": "done",
+      "feedback": "Softer caption please",
+      "post": {
+        "id": "ig-1790160204615-lz4ach",
+        "platform": "instagram",
+        "imageUrl": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221080%22%20height%3D%221080%22%20viewBox%3D%220%200%201080%201080%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23F97316%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%23FB923C%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23FED7AA%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%221080%22%20height%3D%221080%22%20fill%3D%22url(%23g)%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22820%22%20cy%3D%22220%22%20r%3D%22140%22%20fill%3D%22rgba(255%2C255%2C255%2C0.18)%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22860%22%20r%3D%22200%22%20fill%3D%22rgba(255%2C255%2C255%2C0.12)%22%2F%3E%0A%20%20%3Ctext%20x%3D%22540%22%20y%3D%22500%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20system-ui%2C%20sans-serif%22%20font-size%3D%2272%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3ESanctum%3C%2Ftext%3E%0A%20%20%3Ctext%20x%3D%22540%22%20y%3D%22580%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20system-ui%2C%20sans-serif%22%20font-size%3D%2232%22%20fill%3D%22rgba(255%2C255%2C255%2C0.9)%22%3EQuiet%20luxury%20%C2%B7%20Everyday%20ritual%3C%2Ftext%3E%0A%3C%2Fsvg%3E",
+        "caption": "Morning light, soft linen, and a cup that never rushes you.\n\nSanctum is for the quiet moments between the noise — a lifestyle brand built around ritual, warmth, and intentional living.",
+        "hashtags": [
+          "#Sanctum",
+          "#QuietLuxury",
+          "#EverydayRitual",
+          "#SlowLiving",
+          "#Lifestyle"
+        ],
+        "status": "changes_requested",
+        "feedback": "Softer caption please",
+        "createdAt": "2026-09-23T10:43:24.615Z",
+        "updatedAt": "2026-09-23T10:43:34.408Z"
+      },
+      "createdAt": "2026-09-23T10:43:34.408Z",
+      "completedAt": "2026-09-23T10:43:34.483Z",
+      "result": "published"
+    },
+    {
+      "id": "iga-1790160214444-tll5wd",
+      "postId": "ig-1790160204615-lz4ach",
+      "action": "publish",
+      "status": "done",
+      "post": {
+        "id": "ig-1790160204615-lz4ach",
+        "platform": "instagram",
+        "imageUrl": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221080%22%20height%3D%221080%22%20viewBox%3D%220%200%201080%201080%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%22100%25%22%20y2%3D%22100%25%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23F97316%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%23FB923C%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23FED7AA%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20width%3D%221080%22%20height%3D%221080%22%20fill%3D%22url(%23g)%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22820%22%20cy%3D%22220%22%20r%3D%22140%22%20fill%3D%22rgba(255%2C255%2C255%2C0.18)%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22200%22%20cy%3D%22860%22%20r%3D%22200%22%20fill%3D%22rgba(255%2C255%2C255%2C0.12)%22%2F%3E%0A%20%20%3Ctext%20x%3D%22540%22%20y%3D%22500%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20system-ui%2C%20sans-serif%22%20font-size%3D%2272%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3ESanctum%3C%2Ftext%3E%0A%20%20%3Ctext%20x%3D%22540%22%20y%3D%22580%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20system-ui%2C%20sans-serif%22%20font-size%3D%2232%22%20fill%3D%22rgba(255%2C255%2C255%2C0.9)%22%3EQuiet%20luxury%20%C2%B7%20Everyday%20ritual%3C%2Ftext%3E%0A%3C%2Fsvg%3E",
+        "caption": "Revised Sanctum caption",
+        "hashtags": [
+          "#Sanctum",
+          "#QuietLuxury"
+        ],
+        "status": "approved",
+        "feedback": null,
+        "createdAt": "2026-09-23T10:43:24.615Z",
+        "updatedAt": "2026-09-23T10:43:34.444Z"
+      },
+      "createdAt": "2026-09-23T10:43:34.444Z",
+      "completedAt": "2026-09-23T11:19:45.587Z",
+      "result": "published"
+    },
+    {
+      "id": "iga-1790328406049-6jx872",
+      "postId": "ig-1790328019453-t4me50",
+      "action": "revise",
+      "status": "done",
+      "projectId": "sanctum",
+      "feedback": "Change the image don't show too much content on left side",
+      "post": {
+        "id": "ig-1790328019453-t4me50",
+        "platform": "instagram",
+        "imageUrl": "/media/sanctum-SAN-W1-SAT-0926.png",
+        "caption": "Prove it on your data. Inside your perimeter.\n\nAssess told you which problem is worth solving. Prove shows it works — on your documents, under your access rules, on the Sanctum appliance inside your own network.\n\n• Weeks 3–6: one use case, running on your real data\n• Measured against the Assess scorecard, not a demo script\n• Nothing leaves your perimeter\n• A clear go or stop, backed by evidence your Security and Risk teams can check\n\nBuilt for regulated banking and fintech teams who need proof, not promises.\n\nOwn Your AI. Protect Your Data.\n\nProduct: https://www.sanctumai.us",
+        "hashtags": [
+          "#PrivateAI",
+          "#BankingAI",
+          "#DataSovereignty",
+          "#AIGovernance",
+          "#Sanctum",
+          "#FinTech"
+        ],
+        "status": "changes_requested",
+        "feedback": "Change the image don't show too much content on left side",
+        "calendarPostId": "SAN-W1-SAT-0926",
+        "expiresAt": "2026-09-27T04:30:00.000Z",
+        "createdAt": "2026-09-25T09:20:19.452Z",
+        "updatedAt": "2026-09-25T09:26:46.049Z",
+        "postDate": "2026-09-26",
+        "approvalEmail": {
+          "threadId": "1a0d7e0325c116f9",
+          "messageId": "1a0d7e05bd966ff3",
+          "to": "porandlarahul03@gmail.com",
+          "sentAt": "2026-09-25T09:23:26.367Z"
+        },
+        "changesVia": "relix"
+      },
+      "createdAt": "2026-09-25T09:26:46.049Z",
+      "handledBy": "relix-lead",
+      "completedAt": "2026-09-25T09:33:13.851Z"
+    },
+    {
+      "id": "iga-1790329144043-en0a6q",
+      "postId": "ig-1790328019453-t4me50",
+      "action": "publish",
+      "status": "done",
+      "projectId": "sanctum",
+      "publishOn": "2026-09-26",
+      "publishTimeIst": "10:10",
+      "post": {
+        "id": "ig-1790328019453-t4me50",
+        "platform": "instagram",
+        "imageUrl": "/media/sanctum-SAN-W1-SAT-0926-v2.png",
+        "caption": "Prove it on your data. Inside your perimeter.\n\nAssess told you which problem is worth solving. Prove shows it works — on your documents, under your access rules, on the Sanctum appliance inside your own network.\n\n• Weeks 3–6: one use case, running on your real data\n• Measured against the Assess scorecard, not a demo script\n• Nothing leaves your perimeter\n• A clear go or stop, backed by evidence your Security and Risk teams can check\n\nBuilt for regulated banking and fintech teams who need proof, not promises.\n\nOwn Your AI. Protect Your Data.\n\nProduct: https://www.sanctumai.us",
+        "hashtags": [
+          "#PrivateAI",
+          "#BankingAI",
+          "#DataSovereignty",
+          "#AIGovernance",
+          "#Sanctum",
+          "#FinTech"
+        ],
+        "status": "approved",
+        "feedback": null,
+        "calendarPostId": "SAN-W1-SAT-0926",
+        "expiresAt": "2026-09-27T04:30:00.000Z",
+        "createdAt": "2026-09-25T09:20:19.452Z",
+        "updatedAt": "2026-09-25T09:39:04.043Z",
+        "postDate": "2026-09-26",
+        "changesVia": "relix",
+        "lastFeedback": "Change the image don't show too much content on left side",
+        "revision": 2,
+        "pastApprovalEmails": [
+          {
+            "threadId": "1a0d7e0325c116f9",
+            "messageId": "1a0d7e05bd966ff3",
+            "to": "porandlarahul03@gmail.com",
+            "sentAt": "2026-09-25T09:23:26.367Z"
+          }
+        ],
+        "approvedAt": "2026-09-25T09:39:04.043Z",
+        "approvedVia": "relix"
+      },
+      "createdAt": "2026-09-25T09:39:04.043Z",
+      "completedAt": "2026-09-25T09:45:02.631Z",
+      "result": {
+        "zernioPostId": "6ab64292dd4d05b53983d167",
+        "scheduledFor": "2026-09-26T04:39:00.000Z",
+        "publishOn": "2026-09-26",
+        "publishTimeIst": "10:10"
+      }
+    },
+    {
+      "id": "iga-1790581504891-sfoigj",
+      "postId": "ig-1790579880300-0atphf",
+      "action": "revise",
+      "status": "done",
+      "projectId": "sanctum",
+      "feedback": "you are generate grok images. you need to generate images through chatgot and give me right",
+      "post": {
+        "id": "ig-1790579880300-0atphf",
+        "platform": "instagram",
+        "imageUrl": "/media/sanctum-SAN-W2-MON-0929.png",
+        "caption": "KYC packages should never train someone else's model.\n\nID docs, address proofs, corporate packs, adverse-media notes — that's customer data and bank process knowledge. Pasting it into a public or loosely governed GenAI path is not \"productivity.\" It's a control failure waiting for the next incident review.\n\nBanks don't need another generic chatbot. They need a banking-first path for document intelligence:\n\n• KYC / onboarding packages inside your boundary\n• Human review in the loop — as a feature, not a disclaimer\n• Exportable trail: what was asked, what was retrieved, which model version, who approved\n\nSanctum Assess starts with one problem. For many mid-market banks and NBFCs, that problem is KYC docs.\n\nTwo weeks. Scored. Then Prove on your data — or walk away with a clearer boundary story.\n\n→ Assess (KYC docs)\nProduct: https://www.sanctumai.us",
+        "hashtags": [
+          "#KYC",
+          "#PrivateAI",
+          "#BankingAI",
+          "#Sanctum",
+          "#FinTech",
+          "#DataSovereignty"
+        ],
+        "status": "changes_requested",
+        "feedback": "you are generate grok images. you need to generate images through chatgot and give me right",
+        "calendarPostId": "SAN-W2-MON-0929",
+        "expiresAt": "2026-09-30T04:30:00.000Z",
+        "createdAt": "2026-09-28T07:18:00.300Z",
+        "updatedAt": "2026-09-28T07:45:04.891Z",
+        "postDate": "2026-09-29",
+        "approvalEmail": {
+          "threadId": "1a0e6e77400459a3",
+          "messageId": "1a0e6e77400459a3",
+          "to": "porandlarahul03@gmail.com",
+          "sentAt": "2026-09-28T07:25:29.759Z"
+        },
+        "changesVia": "relix"
+      },
+      "createdAt": "2026-09-28T07:45:04.891Z",
+      "completedAt": "2026-09-28T07:48:43.443Z"
+    },
+    {
+      "id": "iga-1790582474646-sfjlyk",
+      "postId": "ig-1790579880300-0atphf",
+      "action": "publish",
+      "status": "done",
+      "projectId": "sanctum",
+      "publishOn": "2026-09-29",
+      "publishTimeIst": "10:10",
+      "post": {
+        "id": "ig-1790579880300-0atphf",
+        "platform": "instagram",
+        "imageUrl": "/media/sanctum-SAN-W2-MON-0929-v5.png",
+        "caption": "KYC packages should never train someone else's model.\n\nID docs, address proofs, corporate packs, adverse-media notes — that's customer data and bank process knowledge. Pasting it into a public or loosely governed GenAI path is not \"productivity.\" It's a control failure waiting for the next incident review.\n\nBanks don't need another generic chatbot. They need a banking-first path for document intelligence:\n\n• KYC / onboarding packages inside your boundary\n• Human review in the loop — as a feature, not a disclaimer\n• Exportable trail: what was asked, what was retrieved, which model version, who approved\n\nSanctum Assess starts with one problem. For many mid-market banks and NBFCs, that problem is KYC docs.\n\nTwo weeks. Scored. Then Prove on your data — or walk away with a clearer boundary story.\n\n→ Assess (KYC docs)\nProduct: https://www.sanctumai.us",
+        "hashtags": [
+          "#KYC",
+          "#PrivateAI",
+          "#BankingAI",
+          "#Sanctum",
+          "#FinTech",
+          "#DataSovereignty"
+        ],
+        "status": "approved",
+        "feedback": null,
+        "calendarPostId": "SAN-W2-MON-0929",
+        "expiresAt": "2026-09-30T04:30:00.000Z",
+        "createdAt": "2026-09-28T07:18:00.300Z",
+        "updatedAt": "2026-09-28T08:01:14.646Z",
+        "postDate": "2026-09-29",
+        "changesVia": "relix",
+        "lastFeedback": "no you didn't follow our logo and sanctum box following those create image for the post and give it for preview.",
+        "revision": 5,
+        "pastApprovalEmails": [
+          {
+            "threadId": "1a0e6e77400459a3",
+            "messageId": "1a0e6e77400459a3",
+            "to": "porandlarahul03@gmail.com",
+            "sentAt": "2026-09-28T07:25:29.759Z"
+          }
+        ],
+        "approvedAt": "2026-09-28T08:01:14.646Z",
+        "approvedVia": "relix"
+      },
+      "createdAt": "2026-09-28T08:01:14.646Z",
+      "completedAt": "2026-09-28T08:12:05.194Z",
+      "result": {
+        "zernioPostId": "6aba214cff91c4efbe4830e4",
+        "calendarPostId": "SAN-W2-MON-0929",
+        "caption": "KYC packages should never train someone else's model.",
+        "scheduledFor": "2026-09-29T04:39:00.000Z",
+        "thumbnailUrl": "/media/sanctum-SAN-W2-MON-0929-v5.png",
+        "account": "@switchonenergy03"
+      }
+    }
+  ]
+}

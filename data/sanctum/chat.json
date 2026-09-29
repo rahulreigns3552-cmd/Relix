@@ -1,0 +1,56 @@
+{
+  "messages": [
+    {
+      "id": "msg-1790313376214-4ni40l",
+      "role": "assistant",
+      "text": "Hi — I am Relix for Sanctum. Ask me anything about brand, content, or Instagram drafts for this quiet-luxury lifestyle project.",
+      "attachments": [],
+      "createdAt": "2026-09-25T05:16:16.214Z"
+    },
+    {
+      "id": "msg-1790585014221-r1g8j3",
+      "role": "user",
+      "text": "give me a free connector link for linkedin",
+      "attachments": [],
+      "createdAt": "2026-09-28T08:43:34.221Z"
+    },
+    {
+      "id": "msg-1790585463071-sa2ncf",
+      "role": "assistant",
+      "text": "Free LinkedIn connector: **Zernio** (same free connector Relix already uses for Sanctum Instagram + WhatsApp).\n\n**Easiest in Relix (recommended)**\n1. Open Relix → **Settings → Channels**\n2. Paste your LinkedIn URL, e.g. `https://www.linkedin.com/company/<your-company>/` or `https://www.linkedin.com/in/<you>/`\n3. Flip the LinkedIn toggle on — Relix will find Zernio, connect it, and send a notification saying connected or connection failed.\n\n**Or connect in Zernio directly**\n1. Open https://zernio.com/dashboard\n2. Connections → New Connection → **LinkedIn**\n3. Finish LinkedIn OAuth (personal profile or company page)\n4. Back in Relix Channels, paste the same LinkedIn URL and toggle on so the row shows Connected\n\nDocs: https://docs.zernio.com/guides/connecting-accounts\n\nNote: Instagram (@switchonenergy03) and WhatsApp are already on Zernio. After LinkedIn connects, Relix will list it on Channels with the URL automatically.",
+      "attachments": [],
+      "createdAt": "2026-09-28T08:51:03.071Z",
+      "jobId": "job-1790585014221-mmgzh1"
+    },
+    {
+      "id": "msg-1790587946965-ixuwfc",
+      "role": "user",
+      "text": "give me the connector to add",
+      "attachments": [],
+      "createdAt": "2026-09-28T09:32:26.966Z"
+    },
+    {
+      "id": "msg-1790588268649-cj1nfc",
+      "role": "assistant",
+      "text": "Here's the connector for LinkedIn. Tap Add, paste your LinkedIn profile or company page URL, and I'll connect it through Zernio. It will show on Channels once it's linked.",
+      "attachments": [
+        {
+          "type": "connector",
+          "connector": {
+            "id": "zernio-linkedin",
+            "name": "Zernio",
+            "description": "Schedule, publish and analyse LinkedIn posts for this brand",
+            "action": "connect_channel",
+            "status": "available",
+            "logoUrl": "/media/connectors/zernio.svg",
+            "tools": 52,
+            "platform": "linkedin"
+          }
+        }
+      ],
+      "createdAt": "2026-09-28T09:37:48.650Z",
+      "jobId": "job-1790587946966-vo2169"
+    }
+  ],
+  "pendingReply": false
+}
