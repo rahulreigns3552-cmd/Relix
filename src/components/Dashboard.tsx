@@ -11,6 +11,7 @@ import { Preview } from './sections/Preview';
 import { Analytics } from './sections/Analytics';
 import { Notifications } from './sections/Notifications';
 import { NotificationPopups } from './NotificationPopups';
+import { FloatingChat } from './FloatingChat';
 import { useNotifications } from '../lib/useNotifications';
 
 const NAV: { id: NavSection; label: string; icon: string }[] = [
@@ -378,6 +379,7 @@ export function Dashboard({
           </div>
         </main>
       </div>
+      <FloatingChat />
     </div>
   );
 }
