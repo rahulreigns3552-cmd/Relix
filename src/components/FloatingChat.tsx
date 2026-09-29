@@ -12,77 +12,93 @@ type Turn = {
 
 const OPTIONS = [
   {
-    id: 'draft',
-    label: 'Draft a post',
-    hint: 'A caption in this brand’s voice',
-    prompt: 'Draft a social post for this brand that matches our voice and current goals.',
-    icon: 'draft',
+    id: 'today',
+    label: "See today's post",
+    hint: 'What is scheduled to go out',
+    prompt: "Show me today's post for this brand, including the caption and where it is scheduled.",
+    icon: 'today',
+    layout: 'feature',
   },
   {
-    id: 'approval',
-    label: 'Check what is waiting for approval',
-    hint: 'See items that still need a yes',
-    prompt: 'What is waiting for approval on this brand right now?',
-    icon: 'check',
+    id: 'review',
+    label: 'Approve or reject a draft',
+    hint: 'Say yes, or send it back',
+    prompt: 'Show me the draft waiting for a decision so I can approve or reject it.',
+    icon: 'review',
+    layout: 'tile',
   },
   {
-    id: 'channel',
-    label: 'Connect a channel',
-    hint: 'Which accounts still need a link',
-    prompt: 'Help me connect a channel for this brand. Which channels are still disconnected, and what should I do next?',
-    icon: 'link',
+    id: 'ig',
+    label: 'Connect Instagram',
+    hint: 'Link the brand account',
+    prompt: 'Help me connect Instagram for this brand. What is still missing, and what should I do next?',
+    icon: 'ig',
+    layout: 'tile',
   },
   {
-    id: 'brand',
-    label: 'Ask about this brand',
-    hint: 'Voice, audience, and focus',
-    prompt: 'Give me a short brief on this brand: voice, audience, and what we should focus on.',
-    icon: 'spark',
+    id: 'next',
+    label: 'Ask Relix what to post next',
+    hint: 'One idea in this brand’s voice',
+    prompt: 'What should we post next for this brand? Suggest one idea that fits our voice and goals.',
+    icon: 'next',
+    layout: 'ask',
   },
 ] as const;
 
 function OptionIcon({ name }: { name: (typeof OPTIONS)[number]['icon'] }) {
   const common = {
-    width: 16,
-    height: 16,
+    width: 18,
+    height: 18,
     viewBox: '0 0 24 24',
     fill: 'none',
     'aria-hidden': true as const,
   };
-  if (name === 'draft') {
+  if (name === 'today') {
     return (
       <svg {...common}>
-        <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-        <path d="M13.5 6.5l3 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="1.7" />
+        <path d="M8 3.5v3M16 3.5v3M4 10h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        <path d="M9 14.2h2.2M12.8 14.2H15" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
       </svg>
     );
   }
-  if (name === 'check') {
+  if (name === 'review') {
     return (
       <svg {...common}>
-        <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="1.7" />
-        <path d="M8 12.2 10.6 15 16 9.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8 12.2 10.4 14.6 15.2 9.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5 7.5h9.2A4.8 4.8 0 0 1 19 12.3V17a2 2 0 0 1-2 2H8.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        <path d="M5 7.5 7.4 5M5 7.5l2.4 2.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
-  if (name === 'link') {
+  if (name === 'ig') {
     return (
       <svg {...common}>
-        <path d="M10 13a5 5 0 0 0 7.1.1l1.4-1.4a5 5 0 0 0-7.1-7.1L10 6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-        <path d="M14 11a5 5 0 0 0-7.1-.1L5.5 12.3a5 5 0 0 0 7.1 7.1L14 18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        <rect x="4" y="4" width="16" height="16" rx="5" stroke="currentColor" strokeWidth="1.7" />
+        <circle cx="12" cy="12" r="3.4" stroke="currentColor" strokeWidth="1.7" />
+        <circle cx="16.6" cy="7.4" r="0.9" fill="currentColor" />
       </svg>
     );
   }
   return (
     <svg {...common}>
-      <path d="M12 3.5 13.6 9l5.4 1.4L13.6 12 12 17.5 10.4 12 5 10.4 10.4 9 12 3.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M12 3.2 13.7 9l5.6 1.5L13.7 12 12 17.8 10.3 12 4.7 10.5 10.3 9 12 3.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M18.2 15.5 19 17.4l1.8.7-1.8.8-.8 1.9-.8-1.9-1.8-.8 1.8-.7.8-1.9Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function Chevron() {
+  return (
+    <svg className="rx-float-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M6 3.5 11 8l-5 4.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function ChatIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M6.2 5.2A3.2 3.2 0 0 1 9.4 2h5.2A3.2 3.2 0 0 1 17.8 5.2v5.1a3.2 3.2 0 0 1-3.2 3.2h-4.2L7 16.8c-.7.6-1.8.1-1.8-.8v-2.2A3.2 3.2 0 0 1 6.2 10.3V5.2Z"
         fill="currentColor"
@@ -102,7 +118,6 @@ export function FloatingChat() {
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setTurns([]);
@@ -168,19 +183,11 @@ export function FloatingChat() {
     <div className={`rx-float${open ? ' is-open' : ''}`}>
       {open && (
         <section
-          ref={panelRef}
           className="rx-float-panel"
           role="dialog"
           aria-label={`Relix for ${project.name}`}
         >
-          <header className="rx-float-head">
-            <div className="rx-float-mark" aria-hidden="true">
-              <ChatIcon />
-            </div>
-            <div className="rx-float-head-copy">
-              <strong>Relix</strong>
-              <span>{project.name}</span>
-            </div>
+          <header className="rx-float-welcome">
             <button
               type="button"
               className="rx-float-close"
@@ -191,18 +198,17 @@ export function FloatingChat() {
                 <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
               </svg>
             </button>
+            <h2>Welcome to Relix</h2>
+            <p>Your brand workspace for posts, approvals, and channels.</p>
           </header>
 
           <div className="rx-float-body" ref={listRef}>
-            <p className="rx-float-greet">
-              Hi — I’m here for <strong>{project.name}</strong>. Pick an option, or ask something of your own.
-            </p>
             <div className="rx-float-options" role="group" aria-label="Chat options">
               {OPTIONS.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
-                  className="rx-float-option"
+                  className={`rx-float-option is-${opt.layout}`}
                   disabled={busy}
                   onClick={() => void ask(opt.prompt, opt.label)}
                 >
@@ -213,6 +219,7 @@ export function FloatingChat() {
                     <strong>{opt.label}</strong>
                     <span>{opt.hint}</span>
                   </span>
+                  {(opt.layout === 'feature' || opt.layout === 'ask') && <Chevron />}
                 </button>
               ))}
             </div>
@@ -253,7 +260,7 @@ export function FloatingChat() {
               ref={inputRef}
               rows={1}
               value={draft}
-              placeholder={`Ask about ${project.name}…`}
+              placeholder="Type a question…"
               aria-label={`Message Relix about ${project.name}`}
               disabled={busy}
               onChange={(e) => setDraft(e.target.value)}
@@ -281,7 +288,7 @@ export function FloatingChat() {
         onClick={() => setOpen((v) => !v)}
       >
         {open ? (
-          <svg width="22" height="22" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
         ) : (
