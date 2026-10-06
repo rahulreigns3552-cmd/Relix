@@ -28,8 +28,14 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       RELIX_LEAD_SINK_EMAIL: ${RELIX_LEAD_SINK_EMAIL:-}
-      RELIX_BRIDGE_WEBHOOK: ${RELIX_BRIDGE_WEBHOOK:-}
-      RELIX_BRIDGE_WEBHOOK_AUTH: ${RELIX_BRIDGE_WEBHOOK_AUTH:-}
+      RELIX_BRIDGE_WEBHOOK: ${RELIX_BRIDGE_WEBHOOK:-http://worker:8790/wake}
+      RELIX_BRIDGE_WEBHOOK_AUTH: ${RELIX_BRIDGE_WEBHOOK_AUTH:-dev-worker-key}
+      SOCIAL_PROVIDER: ${SOCIAL_PROVIDER:-none}
+      ZERNIO_API_KEY: ${ZERNIO_API_KEY:-}
+      AYRSHARE_API_KEY: ${AYRSHARE_API_KEY:-}
+      AYRSHARE_PRIVATE_KEY_PATH: ${AYRSHARE_PRIVATE_KEY_PATH:-}
+      AYRSHARE_DOMAIN: ${AYRSHARE_DOMAIN:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
       SEED_ON_START: "true"
       PORT: "8787"
     depends_on:
@@ -37,6 +43,12 @@ services:
         condition: service_healthy
     expose:
       - "8787"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
   web:
     build:
@@ -46,6 +58,28 @@ services:
       - "${RELIX_PORT:-8080}:80"
     depends_on:
       - api
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      RELIX_API_URL: http://api:8787
+      RELIX_WORKER_API_KEY: ${RELIX_WORKER_API_KEY:-dev-worker-key}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      SOCIAL_PROVIDER: ${SOCIAL_PROVIDER:-none}
+      ZERNIO_API_KEY: ${ZERNIO_API_KEY:-}
+      AYRSHARE_API_KEY: ${AYRSHARE_API_KEY:-}
+      AYRSHARE_PRIVATE_KEY_PATH: ${AYRSHARE_PRIVATE_KEY_PATH:-}
+      AYRSHARE_DOMAIN: ${AYRSHARE_DOMAIN:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      WORKER_PUBLISH_ENABLED: ${WORKER_PUBLISH_ENABLED:-false}
+      WORKER_INTERVAL_SECONDS: ${WORKER_INTERVAL_SECONDS:-60}
+      WORKER_PORT: "8790"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   relix-pg:

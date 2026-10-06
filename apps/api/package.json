@@ -13,9 +13,16 @@
     "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
+    "@relix/shared": "*",
     "@prisma/client": "6.12.0",
     "cors": "^2.8.5",
     "express": "^5.1.0"
+  },
+  "exports": {
+    "./social": {
+      "development": "./src/social/index.ts",
+      "default": "./dist/social/index.js"
+    }
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

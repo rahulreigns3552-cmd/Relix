@@ -1,10 +1,6 @@
 FROM node:22-bookworm-slim
 
 WORKDIR /app
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends openssl ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/web/package.json apps/web/package.json
@@ -13,11 +9,10 @@ COPY packages/shared/package.json packages/shared/package.json
 RUN npm ci
 
 COPY apps/api apps/api
+COPY apps/worker apps/worker
 COPY packages/shared packages/shared
-COPY data data
-RUN npm run build -w @relix/api \
-  && chmod +x apps/api/docker-entrypoint.sh
+RUN npm run build -w @relix/api
 
-ENV PORT=8787
-EXPOSE 8787
-CMD ["sh", "apps/api/docker-entrypoint.sh"]
+ENV WORKER_PORT=8790
+EXPOSE 8790
+CMD ["npm", "run", "start", "-w", "@relix/worker"]

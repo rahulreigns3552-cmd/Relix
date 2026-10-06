@@ -9,10 +9,11 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n api,web -c orange,cyan \"npm run dev -w @relix/api\" \"npm run dev -w @relix/web\"",
-    "build": "npm run build -w @relix/api && npm run build -w @relix/web",
-    "typecheck": "npm run typecheck -w @relix/shared && npm run typecheck -w @relix/api && npm run typecheck -w @relix/web",
+    "worker": "npm run start -w @relix/worker",
+    "build": "npm run build -w @relix/api && npm run build -w @relix/web && npm run build -w @relix/worker",
+    "typecheck": "npm run typecheck -w @relix/shared && npm run typecheck -w @relix/api && npm run typecheck -w @relix/web && npm run typecheck -w @relix/worker",
     "lint": "oxlint apps packages",
-    "test": "npm run test -w @relix/api",
+    "test": "npm run test -w @relix/api && npm run test -w @relix/worker",
     "db:migrate": "npm run db:migrate -w @relix/api",
     "db:seed": "npm run db:seed -w @relix/api"
   },

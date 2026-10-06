@@ -85,6 +85,7 @@ async function loadAll(): Promise<void> {
       industry: project.industry,
       ownerEmail: project.ownerEmail,
       createdAt: project.createdAt.toISOString(),
+      providerProfileRef: project.providerProfileRef,
     })),
   );
 
@@ -157,6 +158,7 @@ async function persistProjects(tx: Tx, value: unknown): Promise<void> {
       industry: String(project.industry || ''),
       ownerEmail: String(project.ownerEmail || ''),
       createdAt: Number.isNaN(createdAt.getTime()) ? new Date() : createdAt,
+      providerProfileRef: project.providerProfileRef ? String(project.providerProfileRef) : null,
     };
     await tx.project.upsert({
       where: { id },

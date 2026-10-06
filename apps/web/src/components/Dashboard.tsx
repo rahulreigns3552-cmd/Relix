@@ -349,7 +349,7 @@ export function Dashboard({
                 />
               )}
               {section === 'goals' && <Goals />}
-              {section === 'channels' && <Channels />}
+              {section === 'channels' && <Channels isAdmin={session.role === 'admin'} />}
               {section === 'brief' && <Brief />}
               {section === 'settings' && (
                 <Settings

@@ -71,7 +71,17 @@ export interface ChannelItem {
   handle: string;
 }
 
-export type ChannelPlatform = 'instagram' | 'linkedin' | 'twitter' | 'youtube' | 'whatsapp' | 'email';
+export type ChannelPlatform =
+  | 'instagram'
+  | 'facebook'
+  | 'linkedin'
+  | 'twitter'
+  | 'youtube'
+  | 'tiktok'
+  | 'threads'
+  | 'pinterest'
+  | 'whatsapp'
+  | 'email';
 export type ChannelStatus = 'disconnected' | 'connecting' | 'connected' | 'failed';
 
 export interface ChannelRecord {
@@ -83,6 +93,7 @@ export interface ChannelRecord {
   connector: string | null;
   connectUrl: string | null;
   accountId: string | null;
+  username?: string | null;
   updatedAt: string | null;
   jobId?: string | null;
 }
@@ -231,6 +242,11 @@ export interface IgPost {
   publishedAt?: string;
   failReason?: string;
 }
+
+export {
+  RELIX_AGENT_SYSTEM_PROMPT,
+} from './agent.js';
+export { scrubVendorText } from './scrub.js';
 
 export interface AnalyticsMetrics {
   impressions: number;

@@ -178,7 +178,7 @@ export const api = {
     }),
 
   chatConnectorAction: (projectId: string, body: { messageId: string; connectorId: string; url?: string }) =>
-    request<{ ok: boolean; chat: ChatThread; error?: string; needsUrl?: boolean; openUrl?: string }>(
+    request<{ ok: boolean; chat: ChatThread; error?: string; needsUrl?: boolean; openUrl?: string; authUrl?: string }>(
       p(projectId, '/chat/connector-action'),
       {
         method: 'POST',
@@ -269,10 +269,10 @@ export const api = {
     ),
 
   getChannels: (projectId: string) =>
-    request<{ items: ChannelRecord[]; serverTime: string }>(p(projectId, '/channels')),
+    request<{ items: ChannelRecord[]; serverTime: string; providerConfigured?: boolean }>(p(projectId, '/channels')),
 
-  connectChannel: (projectId: string, platform: ChannelPlatform, url: string) =>
-    request<{ ok: boolean; channel: ChannelRecord; job?: { id: string } | null }>(
+  connectChannel: (projectId: string, platform: ChannelPlatform, url?: string) =>
+    request<{ ok: boolean; channel: ChannelRecord; job?: { id: string } | null; authUrl?: string }>(
       p(projectId, `/channels/${platform}/connect`),
       { method: 'POST', body: JSON.stringify({ url }) }
     ),

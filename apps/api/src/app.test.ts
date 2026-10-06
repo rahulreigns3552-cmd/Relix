@@ -140,6 +140,46 @@ test('publish complete marks the queue item published, failed, then retry', asyn
   expect(done.externalPostId).toBe('ext-post-1');
 });
 
+test('browser responses never include a posting provider name', async () => {
+  const login = await request(app).post('/api/auth/login').send({
+    email: adminEmail,
+    password: adminPassword,
+  });
+  const cookie = cookieFrom(login);
+  const paths = [
+    '/api/projects',
+    '/api/projects/sanctum/chat',
+    '/api/projects/sanctum/channels',
+    '/api/projects/sanctum/notifications',
+    '/api/projects/sanctum/analytics',
+    '/api/projects/sanctum/ig/queue',
+    '/api/projects/mista/channels',
+    '/api/projects/mista/chat',
+  ];
+  for (const path of paths) {
+    const res = await request(app).get(path).set('Cookie', cookie);
+    expect(res.status).toBe(200);
+    const raw = JSON.stringify(res.body).toLowerCase();
+    expect(raw).not.toContain('zernio');
+    expect(raw).not.toContain('ayrshare');
+    expect(raw).not.toMatch(/docs:\s*"/);
+  }
+});
+
+test('oauth connect explains when posting is not configured', async () => {
+  const login = await request(app).post('/api/auth/login').send({
+    email: adminEmail,
+    password: adminPassword,
+  });
+  const res = await request(app)
+    .post('/api/projects/sanctum/channels/linkedin/connect')
+    .set('Cookie', cookieFrom(login))
+    .send({});
+  expect(res.status).toBe(503);
+  expect(res.body.error).toBe('Posting service not configured');
+  expect(JSON.stringify(res.body).toLowerCase()).not.toContain('zernio');
+});
+
 test('password change and goals are stored on the server', async () => {
   const signup = await request(app).post('/api/auth/signup').send({
     email: 'goals@example.com',

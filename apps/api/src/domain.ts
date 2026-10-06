@@ -5,7 +5,16 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { RELIX_AGENT_SYSTEM_PROMPT, scrubVendorText } from '@relix/shared';
 import { prepareDatabase } from './seed.js';
+import {
+  getSocialProvider,
+  peekHandoff,
+  rememberHandoff,
+  selectionPage,
+  signConnectState,
+  verifyConnectState,
+} from './social/index.js';
 import { flushStore, hasDoc, readDoc, runExclusive, writeDoc } from './store.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -924,6 +933,8 @@ function routeKind(req) {
   const p = req.path;
   if (method === 'GET' && p === '/api/health') return 'public';
   if (method === 'POST' && (p === '/api/auth/login' || p === '/api/auth/signup')) return 'public';
+  if (method === 'GET' && (p === '/api/channels/callback' || p === '/api/channels/go')) return 'public';
+  if (method === 'POST' && p === '/api/channels/callback/select') return 'public';
   const worker =
     (method === 'GET' && p === '/api/bridge/settings') ||
     (method === 'POST' && p === '/api/bridge/settings') ||
@@ -945,11 +956,13 @@ function routeKind(req) {
     (method === 'POST' && /^\/api\/projects\/[^/]+\/ig\/[^/]+\/update$/.test(p)) ||
     (method === 'POST' && /^\/api\/projects\/[^/]+\/ig\/[^/]+\/email-sent$/.test(p)) ||
     (method === 'POST' && /^\/api\/projects\/[^/]+\/ig\/morning-draft$/.test(p)) ||
-    (method === 'POST' && /^\/api\/projects\/[^/]+\/analytics\/sync$/.test(p));
+    (method === 'POST' && /^\/api\/projects\/[^/]+\/analytics\/sync$/.test(p)) ||
+    (method === 'POST' && /^\/api\/projects\/[^/]+\/channels\/[^/]+\/sync$/.test(p));
   if (worker) return 'worker';
   const either =
     /^\/api\/projects\/[^/]+\/ig\/[^/]+\/(approve|request-changes|reject|retry)$/.test(p) ||
-    (method === 'GET' && /^\/api\/projects\/[^/]+\/ig\/queue$/.test(p));
+    (method === 'GET' && /^\/api\/projects\/[^/]+\/ig\/queue$/.test(p)) ||
+    (method === 'GET' && /^\/api\/projects\/[^/]+\/channels$/.test(p));
   if (either) return 'either';
   return 'user';
 }
@@ -1004,6 +1017,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   runExclusive(async () => {
     await new Promise((resolve, reject) => {
@@ -1134,14 +1148,14 @@ app.patch('/api/me', (req, res) => {
 });
 
 app.get('/api/projects', (req, res) => {
-  res.json({ projects: listProjectsForEmail(req.user.email) });
+  res.json({ projects: listProjectsForEmail(req.user.email).map(publicProject) });
 });
 
 app.get('/api/projects/:projectId', (req, res) => {
   const project = listProjects().find((p) => p.id === req.params.projectId);
   if (!project) return res.status(404).json({ error: 'project not found' });
   if (!actorCanAccessProject(req, project.id)) return res.status(403).json({ error: 'forbidden' });
-  res.json({ project });
+  res.json({ project: publicProject(project) });
 });
 
 app.post('/api/projects', (req, res) => {
@@ -1722,7 +1736,7 @@ app.post('/api/projects/:projectId/chat/agent-reply', requireProject, async (req
     const messages = [
       {
         role: 'system',
-        content: 'You are Relix, the assistant inside this brand workspace. Be polite, warm, and short, and match the user\'s tone without being rude or lecturing. Help only with this brand\'s posts, drafts, approvals, captions, calendar, and channels. If the question is general knowledge, news, sports, a celebrity, homework, code, or anything outside that workspace, do not answer it. Say: Sorry, I can\'t help with that. I only help with this brand\'s posts, drafts, and channels. Then offer: see today\'s post, approve or reject a draft, connect Instagram, or ask what to post next. If they ask for adult or sexual content, do not describe it. Say only: I can\'t help you with that. Then offer those same four options. Do not claim a post was published or an email was sent. Do not mention any outside bot or posting vendor.',
+        content: RELIX_AGENT_SYSTEM_PROMPT,
       },
       ...history,
     ];
@@ -1802,12 +1816,7 @@ function sanitizeChatAttachments(list) {
 }
 
 function scrubVendorName(value) {
-  return String(value ?? '')
-    .replace(/https?:\/\/(?:[\w.-]+\.)?zernio\.com[^\s)]*/gi, '')
-    .replace(/\bZernio\b/g, 'Connector')
-    .replace(/\bzernio\b/g, 'connector')
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/[ \t]+\n/g, '\n');
+  return scrubVendorText(String(value ?? ''));
 }
 
 function scrubPublicAssetUrl(value) {
@@ -1821,9 +1830,19 @@ function publicBlockId(id) {
 function clientChannel(channel) {
   if (!channel || typeof channel !== 'object') return channel;
   const next = { ...channel };
+  delete next.accountId;
+  delete next.providerProfileRef;
   if (next.message) next.message = scrubVendorName(next.message);
-  if (next.connector) next.connector = scrubVendorName(next.connector);
-  if (next.connectUrl && /zernio/i.test(String(next.connectUrl))) next.connectUrl = null;
+  if (next.connector) next.connector = 'Relix';
+  if (next.username) next.username = scrubVendorName(next.username);
+  if (next.connectUrl && /zernio|ayrshare/i.test(String(next.connectUrl))) next.connectUrl = null;
+  return next;
+}
+
+function publicProject(project) {
+  if (!project || typeof project !== 'object') return project;
+  const next = { ...project };
+  delete next.providerProfileRef;
   return next;
 }
 
@@ -1983,7 +2002,7 @@ app.post('/api/projects/:projectId/chat/widget-answer', requireProject, (req, re
   res.json({ ok: true, message: userMsg, jobId: job.id, chat: deriveChatBlocks(req.projectId, next) });
 });
 
-app.post('/api/projects/:projectId/chat/connector-action', requireProject, (req, res) => {
+app.post('/api/projects/:projectId/chat/connector-action', requireProject, async (req, res) => {
   const { messageId, connectorId } = req.body || {};
   if (!messageId || !connectorId) return res.status(400).json({ error: 'messageId and connectorId required' });
   const chat = readJson(req.files.chat, { messages: [], pendingReply: false });
@@ -2003,6 +2022,17 @@ app.post('/api/projects/:projectId/chat/connector-action', requireProject, (req,
   if (c.platform) {
     const ch = readChannels(req.projectId).find((x) => x.platform === c.platform);
     if (ch?.status === 'connected') { c.status = 'added'; return done(); }
+    if (OAUTH_PLATFORMS.includes(c.platform)) {
+      const r = await startChannelConnect(req.projectId, c.platform, '');
+      if (!r.ok) {
+        c.status = 'failed';
+        c.error = r.error;
+        return done({ ok: false, error: r.error });
+      }
+      c.status = 'connecting';
+      c.error = null;
+      return done({ authUrl: r.authUrl, channel: clientChannel(r.channel) });
+    }
     const raw = String(req.body?.url || '').trim() || String(ch?.url || '').trim();
     if (!raw) { c.status = 'needs_url'; c.error = null; return done({ needsUrl: true }); }
     const r = startChannelConnect(req.projectId, c.platform, raw);
@@ -2573,7 +2603,7 @@ app.post('/api/projects/:projectId/connections/test', requireProject, (req, res)
   let platforms;
   if (!alias) platforms = CREDENTIAL_PLATFORMS.slice();
   else if (!CREDENTIAL_PLATFORMS.includes(alias)) {
-    return res.status(400).json({ error: 'platform must be instagram, whatsapp, or email' });
+    return res.status(400).json({ error: 'platform must be whatsapp or email' });
   } else platforms = [alias];
   const results = platforms.map((platform) => {
     const r = applyCredentialChannel(req.projectId, platform, req.body?.url);
@@ -2667,14 +2697,19 @@ app.post('/api/projects/:projectId/notifications', requireProject, (req, res) =>
 const CHANNEL_JOBS_FILE = path.join(DATA_DIR, 'channel-jobs.json');
 const CHANNEL_PLATFORMS = {
   instagram: 'Instagram',
+  facebook: 'Facebook',
   linkedin: 'LinkedIn',
   twitter: 'X / Twitter',
   youtube: 'YouTube',
+  tiktok: 'TikTok',
+  threads: 'Threads',
+  pinterest: 'Pinterest',
   whatsapp: 'WhatsApp',
   email: 'Email / Newsletter',
 };
 const CHANNEL_STATUSES = ['disconnected', 'connecting', 'connected', 'failed'];
-const CREDENTIAL_PLATFORMS = ['instagram', 'whatsapp', 'email'];
+const CREDENTIAL_PLATFORMS = ['whatsapp', 'email'];
+const OAUTH_PLATFORMS = ['instagram', 'facebook', 'linkedin', 'twitter', 'youtube', 'tiktok', 'threads', 'pinterest'];
 
 function channelsFile(projectId) {
   return path.join(projectDir(projectId), 'channels.json');
@@ -2689,6 +2724,7 @@ function blankChannel(platform) {
     connector: null,
     connectUrl: null,
     accountId: null,
+    username: null,
     updatedAt: null,
   };
 }
@@ -2800,7 +2836,21 @@ function requireChannelPlatform(req, res, next) {
 }
 
 app.get('/api/projects/:projectId/channels', requireProject, (req, res) => {
-  res.json({ items: readChannels(req.projectId).map(clientChannel), serverTime: new Date().toISOString() });
+  const items = readChannels(req.projectId);
+  const project = listProjects().find((p) => p.id === req.projectId);
+  if (req.authKind === 'worker') {
+    return res.json({
+      items,
+      providerProfileRef: project?.providerProfileRef || null,
+      providerConfigured: Boolean(getSocialProvider()),
+      serverTime: new Date().toISOString(),
+    });
+  }
+  res.json({
+    items: items.map(clientChannel),
+    providerConfigured: Boolean(getSocialProvider()),
+    serverTime: new Date().toISOString(),
+  });
 });
 
 function readProjectSettings(projectId) {
@@ -2894,8 +2944,97 @@ function applyCredentialChannel(projectId, platform, rawUrl) {
   return { ok: true, verified: false, platform, message, channel };
 }
 
+function publicBaseUrl() {
+  const raw = String(process.env.PUBLIC_BASE_URL || process.env.WEB_ORIGIN || 'http://localhost:5173');
+  return raw.split(',')[0].trim().replace(/\/$/, '');
+}
+
+function setProviderProfileRef(projectId, profileRef) {
+  const projects = listProjects();
+  const project = projects.find((p) => p.id === projectId);
+  if (!project) return;
+  project.providerProfileRef = profileRef;
+  writeJson(path.join(DATA_DIR, 'projects.json'), projects);
+}
+
+function connectFailure(error) {
+  const raw = error instanceof Error ? error.message : '';
+  console.error('[relix-api] connect failed');
+  if (/not configured/i.test(raw) || !getSocialProvider()) {
+    return { status: 503, error: 'Posting service not configured' };
+  }
+  return { status: 502, error: 'Could not start connect. Try again.' };
+}
+
+function browserAuthUrl(state) {
+  return `${publicBaseUrl()}/api/channels/go?s=${encodeURIComponent(state)}`;
+}
+
+function redirectChannels(res, projectId, platform, failed) {
+  const target = `${publicBaseUrl()}/p/${encodeURIComponent(projectId)}/channels?${failed ? 'error' : 'connected'}=${encodeURIComponent(platform)}`;
+  res.redirect(target);
+}
+
+function finishChannelConnection(projectId, platform, { accountId, username, message, status }) {
+  const label = CHANNEL_PLATFORMS[platform] || platform;
+  const channel = saveChannel(projectId, platform, {
+    status,
+    accountId: accountId || null,
+    username: username || null,
+    message: message || (status === 'connected' ? (username ? `Connected · @${username}` : 'Connected') : 'Connection failed.'),
+    connector: status === 'connected' ? 'Relix' : null,
+    connectUrl: null,
+    jobId: null,
+  });
+  addNotification(projectId, {
+    title: status === 'connected' ? `${label} connected` : `${label} connection failed`,
+    body: channel.message,
+    kind: status === 'connected' ? 'success' : 'error',
+    section: 'channels',
+  });
+  return channel;
+}
+
+async function startProviderConnect(projectId, platform, options = {}) {
+  const provider = getSocialProvider();
+  if (!provider) return { ok: false, status: 503, error: 'Posting service not configured' };
+  const project = listProjects().find((p) => p.id === projectId);
+  if (!project) return { ok: false, status: 404, error: 'project not found' };
+  try {
+    let profileRef = project.providerProfileRef || '';
+    if (!profileRef) {
+      const created = await provider.createCustomerProfile(projectId, project.name || projectId);
+      profileRef = created.profileRef;
+      setProviderProfileRef(projectId, profileRef);
+    }
+    const state = signConnectState(projectId, platform);
+    const redirectUrl = `${publicBaseUrl()}/api/channels/callback?s=${encodeURIComponent(state)}`;
+    const { authUrl } = await provider.getConnectUrl({
+      profileRef,
+      platform,
+      redirectUrl,
+      state,
+      headless: options.headless,
+    });
+    rememberHandoff(state, authUrl);
+    const channel = saveChannel(projectId, platform, {
+      status: 'connecting',
+      message: 'Waiting for you to approve access.',
+      connector: 'Relix',
+      connectUrl: null,
+      jobId: null,
+    });
+    pingBridgeWebhook({ type: 'channel_connect', projectId, platform });
+    return { ok: true, authUrl: browserAuthUrl(state), channel, state };
+  } catch (error) {
+    const failure = connectFailure(error);
+    return { ok: false, ...failure, channel: null };
+  }
+}
+
 /** Shared channel connect flow (Channels page + chat connector cards). */
-function startChannelConnect(projectId, platform, raw) {
+async function startChannelConnect(projectId, platform, raw) {
+  if (OAUTH_PLATFORMS.includes(platform)) return startProviderConnect(projectId, platform);
   if (CREDENTIAL_PLATFORMS.includes(platform)) {
     const r = applyCredentialChannel(projectId, platform, raw);
     if (!r.ok) return { ok: false, error: r.error, channel: r.channel };
@@ -2928,10 +3067,22 @@ function startChannelConnect(projectId, platform, raw) {
   return { ok: true, channel, job };
 }
 
-app.post('/api/projects/:projectId/channels/:platform/connect', requireProject, requireChannelPlatform, (req, res) => {
-  const r = startChannelConnect(req.projectId, req.platform, req.body?.url);
-  if (!r.ok) return res.status(400).json({ error: r.error, channel: clientChannel(r.channel) });
-  res.json({ ok: true, channel: clientChannel(r.channel), job: r.job });
+app.post('/api/projects/:projectId/channels/:platform/connect', requireProject, requireChannelPlatform, async (req, res) => {
+  try {
+    const r = await startChannelConnect(req.projectId, req.platform, req.body?.url);
+    if (!r.ok) {
+      return res.status(r.status || 400).json({ error: r.error, channel: r.channel ? clientChannel(r.channel) : undefined });
+    }
+    res.json({
+      ok: true,
+      channel: clientChannel(r.channel),
+      job: r.job || null,
+      ...(r.authUrl ? { authUrl: r.authUrl } : {}),
+    });
+  } catch (error) {
+    const failure = connectFailure(error);
+    res.status(failure.status).json({ error: failure.error });
+  }
 });
 
 app.post('/api/projects/:projectId/channels/:platform/disconnect', requireProject, requireChannelPlatform, (req, res) => {
@@ -2947,9 +3098,15 @@ app.post('/api/projects/:projectId/channels/:platform/disconnect', requireProjec
     }
   }
   if (touched) writeJson(CHANNEL_JOBS_FILE, jobs);
+  const previous = readChannels(projectId).find((c) => c.platform === platform);
+  const priorAccount = previous?.accountId || '';
   const channel = saveChannel(projectId, platform, {
-    status: 'disconnected', message: '', connector: null, connectUrl: null, accountId: null, jobId: null,
+    status: 'disconnected', message: '', connector: null, connectUrl: null, accountId: null, username: null, jobId: null,
   });
+  const provider = getSocialProvider();
+  if (provider && priorAccount) {
+    provider.disconnect(priorAccount).catch(() => {});
+  }
   addNotification(projectId, { title: `${label} disconnected`, body: channel.url || '', kind: 'info', section: 'channels' });
   res.json({ ok: true, channel: clientChannel(channel) });
 });
@@ -2973,12 +3130,13 @@ app.post('/api/channel-jobs/:id/result', (req, res) => {
     return res.status(409).json({ error: `job is already ${job.status}`, job });
   }
   const label = CHANNEL_PLATFORMS[job.platform] || job.platform;
-  const message = String(b.message || '').slice(0, 400);
+  const message = scrubVendorName(String(b.message || '').slice(0, 400));
   const connector = b.connector ? String(b.connector).slice(0, 80) : null;
   const connectUrl = b.connectUrl ? String(b.connectUrl).slice(0, 1000) : null;
   const accountId = b.accountId ? String(b.accountId).slice(0, 120) : null;
+  const username = b.username ? String(b.username).replace(/^@/, '').slice(0, 80) : null;
   job.status = b.status;
-  job.result = { status: b.status, message, connector, connectUrl, accountId };
+  job.result = { status: b.status, message, connector: connector || 'Relix', connectUrl, accountId, username };
   job.completedAt = new Date().toISOString();
   writeJson(CHANNEL_JOBS_FILE, jobs);
   let channel = null;
@@ -2989,8 +3147,9 @@ app.post('/api/channel-jobs/:id/result', (req, res) => {
       channel = saveChannel(job.projectId, job.platform, {
         url: job.url,
         status: b.status,
-        message: message || (b.status === 'connected' ? `Connected via ${connector || 'connector'}` : 'Connection failed'),
-        connector,
+        username,
+        message: message || (b.status === 'connected' ? (username ? `Connected · @${username}` : 'Connected') : 'Connection failed'),
+        connector: b.status === 'connected' ? 'Relix' : connector,
         connectUrl: b.status === 'failed' ? connectUrl : null,
         accountId: b.status === 'connected' ? accountId : null,
         jobId: null,
@@ -2999,7 +3158,7 @@ app.post('/api/channel-jobs/:id/result', (req, res) => {
     if (b.status === 'connected') {
       addNotification(job.projectId, {
         title: `${label} connected`,
-        body: `Connected via ${connector || 'connector'}${accountId ? ` · account ${accountId}` : ''} · ${job.url}`,
+        body: channel?.message || (username ? `Connected · @${username}` : 'Connected'),
         kind: 'success',
         section: 'channels',
       });
@@ -3013,6 +3172,118 @@ app.post('/api/channel-jobs/:id/result', (req, res) => {
     }
   }
   res.json({ ok: true, job, channel });
+});
+
+function queryValue(value) {
+  return Array.isArray(value) ? String(value[0] || '') : String(value || '');
+}
+
+function callbackQuery(req) {
+  const out = {};
+  for (const [key, value] of Object.entries(req.query || {})) out[key] = queryValue(value);
+  return out;
+}
+
+app.get('/api/channels/go', (req, res) => {
+  const state = queryValue(req.query.s);
+  const url = peekHandoff(state);
+  if (!url || !verifyConnectState(state)) {
+    return res.status(400).type('html').send('<p>This connect link expired. Go back to Channels and try again.</p>');
+  }
+  res.redirect(url);
+});
+
+app.get('/api/channels/callback', async (req, res) => {
+  const query = callbackQuery(req);
+  const state = verifyConnectState(query.s || '');
+  if (!state) return res.status(400).type('html').send('<p>This connect link expired. Go back to Channels and try again.</p>');
+  const provider = getSocialProvider();
+  if (!provider) {
+    finishChannelConnection(state.projectId, state.platform, { status: 'failed', message: 'Posting service not configured' });
+    return redirectChannels(res, state.projectId, state.platform, true);
+  }
+  try {
+    const result = await provider.handleCallback(query);
+    if ('selection' in result && result.selection) {
+      return res.type('html').send(selectionPage({
+        title: result.selection.title,
+        options: result.selection.options,
+        state: query.s,
+        step: result.selection.step,
+        tempToken: result.selection.tempToken,
+        connectToken: result.selection.connectToken,
+        profileRef: result.selection.profileRef,
+        platform: state.platform,
+      }));
+    }
+    if ('useStandardConnect' in result && result.useStandardConnect) {
+      const restarted = await startProviderConnect(state.projectId, state.platform, { headless: false });
+      if (restarted.ok && restarted.state) {
+        const url = peekHandoff(restarted.state);
+        if (url) return res.redirect(url);
+      }
+    }
+    if ('error' in result) {
+      const message = result.userFixable ? scrubVendorName(result.error) : 'Connection failed. Try again.';
+      finishChannelConnection(state.projectId, state.platform, { status: 'failed', message });
+      return redirectChannels(res, state.projectId, state.platform, true);
+    }
+    finishChannelConnection(state.projectId, state.platform, {
+      status: 'connected',
+      accountId: result.accountId,
+      username: result.username,
+    });
+    return redirectChannels(res, state.projectId, state.platform, false);
+  } catch (error) {
+    console.error('[relix-api] connect callback failed');
+    finishChannelConnection(state.projectId, state.platform, { status: 'failed', message: 'Connection failed. Try again.' });
+    return redirectChannels(res, state.projectId, state.platform, true);
+  }
+});
+
+app.post('/api/channels/callback/select', async (req, res) => {
+  const body = req.body || {};
+  const state = verifyConnectState(String(body.s || ''));
+  if (!state) return res.status(400).type('html').send('<p>This connect link expired. Go back to Channels and try again.</p>');
+  const provider = getSocialProvider();
+  if (!provider) {
+    finishChannelConnection(state.projectId, state.platform, { status: 'failed', message: 'Posting service not configured' });
+    return redirectChannels(res, state.projectId, state.platform, true);
+  }
+  try {
+    const selected = await provider.completeSelection({
+      step: String(body.step || ''),
+      tempToken: String(body.tempToken || ''),
+      connectToken: String(body.connectToken || ''),
+      profileRef: String(body.profileRef || ''),
+      choiceId: String(body.choiceId || ''),
+      platform: state.platform,
+    });
+    finishChannelConnection(state.projectId, state.platform, {
+      status: 'connected',
+      accountId: selected.accountId,
+      username: selected.username,
+    });
+    return redirectChannels(res, state.projectId, state.platform, false);
+  } catch (error) {
+    console.error('[relix-api] account selection failed');
+    finishChannelConnection(state.projectId, state.platform, { status: 'failed', message: 'Could not save that account. Try again.' });
+    return redirectChannels(res, state.projectId, state.platform, true);
+  }
+});
+
+app.post('/api/projects/:projectId/channels/:platform/sync', requireProject, requireChannelPlatform, (req, res) => {
+  const body = req.body || {};
+  const status = ['connected', 'disconnected', 'failed', 'connecting'].includes(body.status) ? body.status : 'connected';
+  const username = body.username ? String(body.username).replace(/^@/, '').slice(0, 80) : null;
+  const channel = saveChannel(req.projectId, req.platform, {
+    status,
+    username,
+    accountId: body.accountId ? String(body.accountId).slice(0, 120) : null,
+    message: scrubVendorName(String(body.message || (username ? `Connected · @${username}` : ''))),
+    connector: status === 'connected' ? 'Relix' : null,
+  });
+  res.json({ ok: true, channel });
 });
 
 app.use((err, _req, res, _next) => {

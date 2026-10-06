@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../lib/api';
+import { RichText } from '../lib/richText';
 import { useProject } from '../lib/ProjectContext';
 import type {
   ChannelPlatform,
@@ -539,10 +540,11 @@ export function FloatingChat({ onNavigate }: Props) {
     const platform = connector.platform as ChannelPlatform | undefined;
     openChannels(platform);
     try {
-      await api.chatConnectorAction(projectId, {
+      const res = await api.chatConnectorAction(projectId, {
         messageId,
         connectorId: connector.id,
       });
+      if (res.authUrl) window.location.assign(res.authUrl);
     } catch {
       /* Channels section still opens; URL can be pasted there. */
     }
@@ -652,7 +654,11 @@ export function FloatingChat({ onNavigate }: Props) {
                       key={turn.id}
                       className={`rx-float-turn is-${turn.role}${turn.error ? ' is-error' : ''}`}
                     >
-                      {shown ? <div className="rx-float-turn-text">{shown}</div> : null}
+                      {shown ? (
+                        <div className="rx-float-turn-text">
+                          {turn.role === 'assistant' && !turn.error ? <RichText text={shown} /> : shown}
+                        </div>
+                      ) : null}
                       {turn.role === 'assistant' ? renderAttachments(turn) : null}
                     </div>
                   );

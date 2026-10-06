@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 import { api } from '../../lib/api';
+import { RichText } from '../../lib/richText';
 import { useProject } from '../../lib/ProjectContext';
 import { getLocalChat, saveLocalChat } from '../../lib/storage';
 import type { ChatAttachment, ChatConnector, ChatMessage, ChatThread, ChatWidget } from '../../lib/types';
@@ -72,39 +73,8 @@ function AttachmentView({ att }: { att: ChatAttachment }) {
   return null;
 }
 
-const URL_OR_MD_LINK = /\[([^\]\n]{1,120})\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"']+[^\s<>"'.,;:!?)\]}])/g;
-
-function shortDomain(url: string) {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return url.length > 32 ? `${url.slice(0, 31)}…` : url;
-  }
-}
-
-function LinkChip({ href, label }: { href: string; label?: string }) {
-  return (
-    <a className="chat-link-chip" href={href} target="_blank" rel="noreferrer" title={href}>
-      <span className="chat-link-chip-icon" aria-hidden="true">↗</span>
-      {label || shortDomain(href)}
-    </a>
-  );
-}
-
-/** Bot text: bare URLs / markdown links become short domain chips instead of long raw strings. */
 function BotText({ text }: { text: string }) {
-  const parts: (string | ReactNode)[] = [];
-  let last = 0;
-  let i = 0;
-  for (const m of text.matchAll(URL_OR_MD_LINK)) {
-    const idx = m.index ?? 0;
-    if (idx > last) parts.push(text.slice(last, idx));
-    if (m[2]) parts.push(<LinkChip key={`l${i++}`} href={m[2]} label={m[1]} />);
-    else parts.push(<LinkChip key={`l${i++}`} href={m[3]} />);
-    last = idx + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return <>{parts}</>;
+  return <RichText text={text} />;
 }
 
 const LOGO_COLORS = ['#f97316', '#2563eb', '#16a34a', '#db2777', '#7c3aed', '#0891b2', '#dc2626', '#ca8a04'];
@@ -542,6 +512,7 @@ export function Chat() {
     onConnectorAction: async (messageId, connectorId, url) => {
       try {
         const res = await api.chatConnectorAction(projectId, { messageId, connectorId, url });
+        if (res.authUrl) window.location.assign(res.authUrl);
         setThread(res.chat);
         saveLocalChat(projectId, res.chat);
         if (res.ok === false && res.error) toast(res.error, 'error');

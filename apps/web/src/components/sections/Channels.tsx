@@ -1,20 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { ChannelPlatform, ChannelRecord } from '../../lib/types';
 import { api } from '../../lib/api';
 import { useProject } from '../../lib/ProjectContext';
 import { useToast } from '../Toast';
 
-const PLATFORMS: { id: ChannelPlatform; name: string; placeholder: string }[] = [
-  { id: 'instagram', name: 'Instagram', placeholder: 'https://www.instagram.com/yourhandle/' },
-  { id: 'linkedin', name: 'LinkedIn', placeholder: 'https://www.linkedin.com/company/yourbrand/' },
-  { id: 'twitter', name: 'X / Twitter', placeholder: 'https://x.com/yourhandle' },
-  { id: 'youtube', name: 'YouTube', placeholder: 'https://www.youtube.com/@yourchannel' },
-  { id: 'whatsapp', name: 'WhatsApp', placeholder: 'https://wa.me/919876543210' },
-  { id: 'email', name: 'Email / Newsletter', placeholder: 'you@brand.com or https://brand.substack.com' },
+const OAUTH: { id: ChannelPlatform; name: string; logo: string }[] = [
+  { id: 'instagram', name: 'Instagram', logo: '/media/connectors/instagram.svg' },
+  { id: 'facebook', name: 'Facebook', logo: '/media/connectors/facebook.svg' },
+  { id: 'linkedin', name: 'LinkedIn', logo: '/media/connectors/linkedin.svg' },
+  { id: 'twitter', name: 'X', logo: '/media/connectors/x.svg' },
+  { id: 'youtube', name: 'YouTube', logo: '/media/connectors/youtube.svg' },
+  { id: 'tiktok', name: 'TikTok', logo: '/media/connectors/tiktok.svg' },
+  { id: 'threads', name: 'Threads', logo: '/media/connectors/threads.svg' },
+  { id: 'pinterest', name: 'Pinterest', logo: '/media/connectors/pinterest.svg' },
 ];
 
-const POLL_MS = 10_000;
-const CREDENTIAL_PLATFORMS: ChannelPlatform[] = ['instagram', 'whatsapp', 'email'];
+const MANUAL: { id: 'whatsapp' | 'email'; name: string; placeholder: string }[] = [
+  { id: 'whatsapp', name: 'WhatsApp', placeholder: 'https://wa.me/919876543210' },
+  { id: 'email', name: 'Email / Newsletter', placeholder: 'you@brand.com' },
+];
 
 function blank(id: ChannelPlatform, name: string): ChannelRecord {
   return {
@@ -26,32 +31,30 @@ function blank(id: ChannelPlatform, name: string): ChannelRecord {
     connector: null,
     connectUrl: null,
     accountId: null,
+    username: null,
     updatedAt: null,
   };
 }
 
-export function Channels() {
+export function Channels({ isAdmin = false }: { isAdmin?: boolean }) {
   const { projectId } = useProject();
   const { toast } = useToast();
+  const [params, setParams] = useSearchParams();
   const [records, setRecords] = useState<Record<string, ChannelRecord>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<Record<string, boolean>>({});
   const [loaded, setLoaded] = useState(false);
+  const [configured, setConfigured] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const dirty = useRef<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     try {
-      const { items } = await api.getChannels(projectId);
+      const result = await api.getChannels(projectId);
       const map: Record<string, ChannelRecord> = {};
-      for (const c of items) map[c.platform] = c;
+      for (const channel of result.items) map[channel.platform] = channel;
       setRecords(map);
-      setDrafts((prev) => {
-        const next = { ...prev };
-        for (const c of items) if (!dirty.current[c.platform]) next[c.platform] = c.url || '';
-        return next;
-      });
+      setConfigured(result.providerConfigured !== false);
       setLoadError('');
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Could not load channels.');
@@ -61,170 +64,146 @@ export function Channels() {
   }, [projectId]);
 
   useEffect(() => {
-    dirty.current = {};
     setRecords({});
-    setDrafts({});
-    setErrors({});
     setLoaded(false);
-    load();
+    void load();
   }, [load]);
 
   useEffect(() => {
-    if (!loaded) return;
-    let focus = '';
-    try {
-      focus = sessionStorage.getItem('relix_channelFocus') || '';
-      if (focus) sessionStorage.removeItem('relix_channelFocus');
-    } catch {
-      /* ignore */
-    }
-    if (!focus) return;
-    const timer = window.setTimeout(() => {
-      const el = document.getElementById(`channel-row-${focus}`);
-      if (!el) return;
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('channel-row-focus');
-      window.setTimeout(() => el.classList.remove('channel-row-focus'), 2200);
-    }, 80);
-    return () => window.clearTimeout(timer);
-  }, [loaded, records]);
+    const connected = params.get('connected');
+    const failed = params.get('error');
+    if (!connected && !failed) return;
+    const name = [...OAUTH, ...MANUAL].find((row) => row.id === (connected || failed))?.name || 'Channel';
+    toast(connected ? `${name} connected.` : `${name} could not connect.`, connected ? 'success' : 'error');
+    const next = new URLSearchParams(params);
+    next.delete('connected');
+    next.delete('error');
+    setParams(next, { replace: true });
+  }, [params, setParams, toast]);
 
-  const anyConnecting = Object.values(records).some((r) => r.status === 'connecting');
+  const anyConnecting = Object.values(records).some((row) => row.status === 'connecting');
   useEffect(() => {
     if (!anyConnecting) return;
-    const t = window.setInterval(load, POLL_MS);
-    return () => window.clearInterval(t);
+    const timer = window.setInterval(() => void load(), 10_000);
+    return () => window.clearInterval(timer);
   }, [anyConnecting, load]);
 
-  function setBusyFor(id: string, v: boolean) {
-    setBusy((b) => ({ ...b, [id]: v }));
-  }
-
-  async function connect(id: ChannelPlatform, name: string) {
-    const url = (drafts[id] || '').trim();
-    const usesSavedKey = CREDENTIAL_PLATFORMS.includes(id);
-    if (!url && !usesSavedKey) {
-      setErrors((e) => ({ ...e, [id]: `Paste your ${name} URL before turning this on.` }));
-      return;
-    }
-    setErrors((e) => ({ ...e, [id]: '' }));
-    setBusyFor(id, true);
+  async function connectOauth(id: ChannelPlatform) {
+    setBusy((current) => ({ ...current, [id]: true }));
+    setErrors((current) => ({ ...current, [id]: '' }));
     try {
-      if (usesSavedKey) {
-        const tested = await api.testConnections(
-          projectId,
-          id as 'instagram' | 'whatsapp' | 'email',
-          url || undefined,
-        );
-        const row = tested.results[0];
-        if (!row) throw new Error('Connection check returned no result.');
-        dirty.current[id] = false;
-        setRecords((r) => ({ ...r, [id]: row.channel }));
-        if (row.channel.url) setDrafts((d) => ({ ...d, [id]: row.channel.url }));
-        if (!row.ok) {
-          setErrors((e) => ({ ...e, [id]: row.message }));
-          return;
-        }
-        toast(`${name}: ${row.message}`, 'info');
+      const result = await api.connectChannel(projectId, id);
+      if (result.authUrl) {
+        window.location.assign(result.authUrl);
         return;
       }
-      const { channel } = await api.connectChannel(projectId, id, url);
-      dirty.current[id] = false;
-      setRecords((r) => ({ ...r, [id]: channel }));
-      setDrafts((d) => ({ ...d, [id]: channel.url }));
-      toast(`Connecting ${name}… we'll notify you when it's done.`, 'info');
+      setRecords((current) => ({ ...current, [id]: result.channel }));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Connection failed.';
-      setErrors((e) => ({ ...e, [id]: msg }));
-      await load();
+      setErrors((current) => ({ ...current, [id]: err instanceof Error ? err.message : 'Connection failed.' }));
     } finally {
-      setBusyFor(id, false);
+      setBusy((current) => ({ ...current, [id]: false }));
+    }
+  }
+
+  async function connectManual(id: 'whatsapp' | 'email', name: string) {
+    const url = (drafts[id] || '').trim();
+    if (!url && id !== 'whatsapp' && id !== 'email') return;
+    setBusy((current) => ({ ...current, [id]: true }));
+    try {
+      const tested = await api.testConnections(projectId, id, url || undefined);
+      const row = tested.results[0];
+      if (!row) throw new Error('Connection check returned no result.');
+      setRecords((current) => ({ ...current, [id]: row.channel }));
+      if (!row.ok) setErrors((current) => ({ ...current, [id]: row.message }));
+      else toast(`${name}: ${row.message}`, 'info');
+    } catch (err) {
+      setErrors((current) => ({ ...current, [id]: err instanceof Error ? err.message : 'Connection failed.' }));
+    } finally {
+      setBusy((current) => ({ ...current, [id]: false }));
     }
   }
 
   async function disconnect(id: ChannelPlatform, name: string) {
-    setBusyFor(id, true);
+    setBusy((current) => ({ ...current, [id]: true }));
     try {
       const { channel } = await api.disconnectChannel(projectId, id);
-      setRecords((r) => ({ ...r, [id]: channel }));
-      setErrors((e) => ({ ...e, [id]: '' }));
+      setRecords((current) => ({ ...current, [id]: channel }));
       toast(`${name} disconnected.`, 'info');
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Could not disconnect.', 'error');
     } finally {
-      setBusyFor(id, false);
+      setBusy((current) => ({ ...current, [id]: false }));
     }
   }
 
   return (
     <div className="card">
       <h3 className="card-title">Channels</h3>
-      <p className="card-sub">
-        Instagram, WhatsApp, and email use the keys saved in Settings. Turn the toggle on to
-        check the saved key. Other channels still use the account URL.
-      </p>
+      <p className="card-sub">Connect a network once. Relix posts only after you approve the preview.</p>
+      {!configured && isAdmin && (
+        <div className="channel-error" style={{ marginBottom: 12 }}>Posting service not configured</div>
+      )}
+      {!configured && !isAdmin && (
+        <p className="card-sub">Connect isn’t available on this workspace yet.</p>
+      )}
       {loadError && <div className="channel-error" style={{ marginBottom: 12 }}>{loadError}</div>}
       <div className="channel-list">
-        {PLATFORMS.map(({ id, name, placeholder }) => {
+        {OAUTH.map(({ id, name, logo }) => {
           const rec = records[id] || blank(id, name);
-          const on = rec.status === 'connecting' || rec.status === 'connected';
-          const isBusy = !!busy[id] || !loaded;
-          const err = errors[id];
+          const connected = rec.status === 'connected';
+          return (
+            <div id={`channel-row-${id}`} key={id} className={`channel-row channel-${rec.status}`}>
+              <div className="channel-id">
+                <img className="channel-logo" src={logo} alt="" />
+                <div>
+                  <div className="channel-name">{name}</div>
+                  <ChannelChip rec={rec} />
+                </div>
+              </div>
+              <div className="channel-actions">
+                {connected ? (
+                  <button type="button" className="btn btn-ghost" disabled={!loaded || !!busy[id]} onClick={() => void disconnect(id, name)}>
+                    Disconnect
+                  </button>
+                ) : (
+                  <button type="button" className="btn btn-primary" disabled={!loaded || !!busy[id] || !configured} onClick={() => void connectOauth(id)}>
+                    {busy[id] ? 'Connecting…' : 'Connect'}
+                  </button>
+                )}
+              </div>
+              <div>
+                {errors[id] && <span className="channel-error">{errors[id]}</span>}
+                {!errors[id] && rec.status === 'failed' && rec.message && <span className="channel-error">{rec.message}</span>}
+                {connected && rec.username && <span className="field-hint">Connected · @{rec.username.replace(/^@/, '')}</span>}
+              </div>
+            </div>
+          );
+        })}
+        {MANUAL.map(({ id, name, placeholder }) => {
+          const rec = records[id] || blank(id, name);
+          const on = rec.status === 'connected' || rec.status === 'connecting';
           return (
             <div id={`channel-row-${id}`} key={id} className={`channel-row channel-${rec.status}`}>
               <div>
                 <div className="channel-name">{name}</div>
                 <ChannelChip rec={rec} />
               </div>
-              <div className="toggle-wrap">
-                <button
-                  type="button"
-                  className={`toggle ${on ? 'on' : ''}`}
-                  aria-label={`Toggle ${name}`}
-                  aria-pressed={on}
-                  disabled={isBusy}
-                  onClick={() => (on ? disconnect(id, name) : connect(id, name))}
-                />
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {busy[id] ? '…' : on ? 'On' : 'Off'}
-                </span>
-              </div>
+              <button
+                type="button"
+                className={`toggle ${on ? 'on' : ''}`}
+                aria-label={`Toggle ${name}`}
+                aria-pressed={on}
+                disabled={!loaded || !!busy[id]}
+                onClick={() => (on ? void disconnect(id, name) : void connectManual(id, name))}
+              />
               <div className="field" style={{ margin: 0 }}>
                 <input
-                  value={drafts[id] ?? ''}
-                  className={err ? 'invalid' : ''}
-                  aria-invalid={!!err}
-                  disabled={on}
-                  onChange={(e) => {
-                    dirty.current[id] = true;
-                    setDrafts((d) => ({ ...d, [id]: e.target.value }));
-                    if (err) setErrors((x) => ({ ...x, [id]: '' }));
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !on) connect(id, name);
-                  }}
+                  value={drafts[id] ?? rec.url ?? ''}
                   placeholder={placeholder}
+                  disabled={on}
+                  onChange={(event) => setDrafts((current) => ({ ...current, [id]: event.target.value }))}
                 />
-                {err && <span className="channel-error">{err}</span>}
-                {!err && rec.status === 'failed' && rec.message && (
-                  <span className="channel-error">
-                    {rec.message}
-                    {rec.connectUrl && (
-                      <>
-                        {' '}
-                        <a href={rec.connectUrl} target="_blank" rel="noopener noreferrer" className="channel-link">
-                          Finish connecting ↗
-                        </a>
-                      </>
-                    )}
-                  </span>
-                )}
-                {!err && rec.status === 'connected' && (rec.message || rec.accountId) && (
-                  <span className="field-hint">
-                    {rec.message}
-                    {rec.accountId ? `${rec.message ? ' · ' : ''}Account ${rec.accountId}` : ''}
-                  </span>
-                )}
+                {errors[id] && <span className="channel-error">{errors[id]}</span>}
               </div>
             </div>
           );
@@ -236,25 +215,12 @@ export function Channels() {
 
 function ChannelChip({ rec }: { rec: ChannelRecord }) {
   if (rec.status === 'connecting') {
-    return (
-      <span className="badge channel-chip chip-connecting">
-        <span className="chip-dot" /> Connecting...
-      </span>
-    );
+    return <span className="badge channel-chip chip-connecting"><span className="chip-dot" /> Connecting...</span>;
   }
   if (rec.status === 'connected') {
-    return (
-      <span className="badge channel-chip chip-connected" title={rec.message || undefined}>
-        Connected{rec.connector ? ` · ${rec.connector}` : ''}
-      </span>
-    );
+    const handle = rec.username ? `@${rec.username.replace(/^@/, '')}` : '';
+    return <span className="badge channel-chip chip-connected">Connected{handle ? ` · ${handle}` : ''}</span>;
   }
-  if (rec.status === 'failed') {
-    return (
-      <span className="badge channel-chip chip-failed" title={rec.message || undefined}>
-        Failed
-      </span>
-    );
-  }
+  if (rec.status === 'failed') return <span className="badge channel-chip chip-failed">Failed</span>;
   return <span className="badge badge-muted channel-chip">Not connected</span>;
 }

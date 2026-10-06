@@ -5,7 +5,8 @@ Orange-and-white control panel for multi-brand social ops. Ask Relix drafts and 
 ```
 apps/web     Vite + React UI
 apps/api     Express API (TypeScript) + Prisma
-packages/shared   shared UI types
+apps/worker  chat replies, channel sync, publish, provision
+packages/shared   shared UI types and the Ask Relix prompt
 data/        legacy JSON imported by the seed (not the live database)
 ```
 
@@ -27,7 +28,7 @@ docker compose up --build
 
 Open http://localhost:8080 and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env` (the example values are `admin@relix.app` / `change-me-please` until you change them).
 
-On first boot the API runs Prisma migrations, imports `data/` when the database is empty, and ensures the admin user. Sanctum and the other seeded brands show up for that admin.
+Compose starts Postgres, the API, Nginx, and the worker. On first boot the API runs Prisma migrations, imports `data/` when the database is empty, and ensures the admin user. Sanctum and the other seeded brands show up for that admin. The worker polls the API every `WORKER_INTERVAL_SECONDS` (default 60). Publishing stays off until `WORKER_PUBLISH_ENABLED=true`.
 
 ### Windows (PowerShell)
 
@@ -65,6 +66,8 @@ npm run dev
 
 UI: http://localhost:5173 (Vite proxies `/api` and `/media` to port 8787).
 
+In another terminal, `npm run worker` starts the in-repo agent loop against `http://127.0.0.1:8787`. Set `RELIX_BRIDGE_WEBHOOK=http://127.0.0.1:8790/wake` and set `RELIX_BRIDGE_WEBHOOK_AUTH` to the same value as `RELIX_WORKER_API_KEY` if you want the API to wake it immediately.
+
 ### Windows (PowerShell)
 
 Install Node.js 22 and PostgreSQL 16, then create the database in `psql`:
@@ -82,7 +85,7 @@ npm run db:seed
 npm run dev
 ```
 
-`DATABASE_URL` in `.env` must match the user, password, and database you created. The API reads that file on startup.
+`DATABASE_URL` in `.env` must match the user, password, and database you created. The API reads that file on startup. `npm run worker` in a second terminal starts the agent loop, same as on Linux.
 
 ## Checks
 
@@ -97,7 +100,7 @@ npm run build
 
 The browser session is an httpOnly cookie named `relix_session` (HMAC JWT, 7 days). API clients may also send `Authorization: Bearer <jwt>`.
 
-Every `/api` route except `GET /api/health`, `POST /api/auth/login`, and `POST /api/auth/signup` returns **401** without a session or the worker key. Project routes return **403** when the signed-in user does not own the project. The seeded admin can see every project.
+Every `/api` route except `GET /api/health`, `POST /api/auth/login`, `POST /api/auth/signup`, `GET /api/channels/callback`, `GET /api/channels/go`, and `POST /api/channels/callback/select` returns **401** without a session or the worker key. The channel routes are the OAuth return path. Project routes return **403** when the signed-in user does not own the project. The seeded admin can see every project.
 
 `GET /media/...` is served by the API (and proxied by Nginx) so preview images load on the same origin.
 
@@ -143,6 +146,13 @@ Paths and JSON bodies are unchanged. Base URL on the host is `http://127.0.0.1:8
 | `GET /api/channel-jobs?status=pending` | worker |
 | `POST /api/channel-jobs/:id/result` | worker |
 | `GET /api/leads/pending` and `POST /api/leads/:id/sent` | worker |
+| `POST /api/projects/:pid/channels/:platform/connect` | signed-in user. Returns `{ authUrl }` on this origin |
+| `GET /api/channels/go` | public handoff into the platform consent screen |
+| `GET /api/channels/callback` | public OAuth return |
+| `POST /api/channels/callback/select` | public Relix page or organization picker |
+| `POST /api/projects/:pid/channels/:platform/sync` | worker |
+
+Job behaviour, failure handling, and the sequence from browser to platform are in [docs/AGENTS.md](docs/AGENTS.md). Provider setup is in [docs/SOCIAL-PROVIDERS.md](docs/SOCIAL-PROVIDERS.md).
 
 ### Publish lifecycle
 
@@ -169,15 +179,29 @@ Chat block shapes (question cards and connector cards) are in [CHAT-BLOCKS.md](C
 | `COOKIE_SECURE` | `true` when the site is HTTPS |
 | `OPENAI_API_KEY` / `OPENAI_MODEL` | Ask Relix replies. Model defaults to `gpt-4o-mini` |
 | `RELIX_LEAD_SINK_EMAIL` | Optional address stored on completed-chat leads |
-| `RELIX_BRIDGE_WEBHOOK` / `RELIX_BRIDGE_WEBHOOK_AUTH` | Optional wake-up POST when chat or provision jobs are queued |
+| `RELIX_BRIDGE_WEBHOOK` / `RELIX_BRIDGE_WEBHOOK_AUTH` | Wake-up POST when chat or provision jobs are queued. Compose defaults the URL to `http://worker:8790/wake`. The auth value must equal `RELIX_WORKER_API_KEY` |
+| `SOCIAL_PROVIDER` | `none` (default), `zernio`, or `ayrshare`. `none` makes no network calls |
+| `ZERNIO_API_KEY` | Key for the Zernio adapter. Leave empty in the example |
+| `AYRSHARE_API_KEY` / `AYRSHARE_DOMAIN` / `AYRSHARE_PRIVATE_KEY_PATH` | Ayrshare adapter. The private key can also be `AYRSHARE_PRIVATE_KEY` inline. Do not commit a key file |
+| `PUBLIC_BASE_URL` | Origin used to build the OAuth redirect |
+| `WORKER_PUBLISH_ENABLED` | `false` by default. The worker logs and skips publish actions until this is `true` |
+| `WORKER_INTERVAL_SECONDS` | Worker poll interval (default `60`) |
 | `PORT` | API port (default `8787`) |
 | `RELIX_PORT` | Host port mapped to Nginx (default `8080`) |
 | `SEED_ON_START` | Import `data/` when the database has no projects (`true` by default) |
 
 Do not commit `.env`, API keys, or `data/channel-sync-state.json`.
 
+## Connect
+
+Channels for Instagram, Facebook, LinkedIn, X, YouTube, TikTok, Threads, and Pinterest use **Connect**. That calls `POST /api/projects/:id/channels/:platform/connect`. The JSON `authUrl` is always on this site (`/api/channels/go`). The API then redirects to the platform. After consent, the browser lands on `/p/:projectId/channels?connected=<platform>`. A page or organization choice is a Relix screen (orange and white), posted back to `/api/channels/callback/select`.
+
+WhatsApp and email stay manual (a link or address in Channels, or the key check in Settings). With `SOCIAL_PROVIDER=none`, admins see "Posting service not configured" on Channels. Other roles see that connect is not available on the workspace yet.
+
+Chat connector cards use the same connect call.
+
 ## Product rules
 
-- The posting-provider name is not shown in the UI. Connector cards say "Connector".
-- Approve, Request changes, and Reject stay on Preview. A failed publish can be retried; that is not a new approval.
-- Ask Relix stays inside the brand's posts, drafts, approvals, captions, calendar, and channels. Out-of-scope replies use the existing refusal text and an app-options card.
+- The posting-provider name is not shown in the UI or in JSON the browser receives. Connector cards say "Relix".
+- Approve, Request changes, and Reject stay on Preview. A failed publish can be retried; that is not a new approval. The worker posts only when `WORKER_PUBLISH_ENABLED=true` and the live queue item is `approved`.
+- Ask Relix stays inside the brand's posts, drafts, approvals, captions, calendar, and channels. Out-of-scope replies use the existing refusal text and an app-options card. Chat text renders bold, italic, code, links, and lists. Vendor links that used to leave a dangling "Docs:" or "1. Open" line are dropped.

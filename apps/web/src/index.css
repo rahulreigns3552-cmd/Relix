@@ -983,7 +983,7 @@ a {
 
 .channel-row {
   display: grid;
-  grid-template-columns: 160px 140px 1fr;
+  grid-template-columns: 220px 140px 1fr;
   gap: 14px;
   align-items: center;
   padding: 14px 16px;
@@ -1001,6 +1001,23 @@ a {
 .channel-name {
   font-weight: 600;
   font-size: 14px;
+}
+
+.channel-id {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.channel-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.channel-actions {
+  display: flex;
+  align-items: center;
 }
 
 .toggle {
@@ -1610,6 +1627,35 @@ a {
   -webkit-backdrop-filter: blur(10px);
   color: var(--text);
   border-bottom-left-radius: 6px;
+}
+
+.rich-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: normal;
+}
+
+.rich-line.is-item {
+  display: flex;
+  gap: 8px;
+}
+
+.rich-mark {
+  color: var(--primary);
+}
+
+.rich-text a {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.rich-text code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  background: var(--bg-muted);
+  padding: 0 4px;
+  border-radius: 4px;
 }
 
 .chat-meta {
