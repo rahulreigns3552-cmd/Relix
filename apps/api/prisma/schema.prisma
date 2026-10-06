@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  passwordHash         String
+  role                 String   @default("user")
+  displayName          String   @default("Relix")
+  emailNotifications   Boolean  @default(true)
+  pushNotifications    Boolean  @default(false)
+  weeklyDigest         Boolean  @default(true)
+  confirmBeforeProceed Boolean  @default(true)
+  createdAt            DateTime @default(now())
+}
+
+model Project {
+  id          String       @id
+  name        String
+  description String       @default("")
+  website     String       @default("")
+  industry    String       @default("")
+  ownerEmail  String
+  createdAt   DateTime
+  docs        ProjectDoc[]
+}
+
+/// Per-project JSON documents (chat, ig queue, settings, goals, briefs, …).
+model ProjectDoc {
+  projectId String
+  docKey    String
+  body      Json
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, docKey])
+}
+
+model ProvisionJob {
+  id        String  @id
+  status    String  @default("pending")
+  projectId String?
+  email     String?
+  sortOrder Int     @default(0)
+  body      Json
+}
+
+model ChannelJob {
+  id        String  @id
+  projectId String?
+  platform  String?
+  status    String?
+  sortOrder Int     @default(0)
+  body      Json
+}
+
+model BridgeSetting {
+  id   Int  @id
+  body Json
+}
+
+model AppDocument {
+  docKey String @id
+  body   Json
+}
+
+model ChatLead {
+  id          String  @id
+  projectId   String
+  exchangeKey String  @unique
+  createdAt   String
+  toEmail     String
+  emailedAt   String?
+  transcript  Json
+
+  @@index([emailedAt, createdAt])
+}

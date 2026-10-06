@@ -1,33 +1,23 @@
 {
-  "name": "ops-lead-app",
+  "name": "relix",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "concurrently -k -n api,vite -c orange,cyan \"node server.mjs\" \"vite\"",
-    "dev:api": "node server.mjs",
-    "dev:web": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "mysql2": "^3.24.4",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "dev": "concurrently -k -n api,web -c orange,cyan \"npm run dev -w @relix/api\" \"npm run dev -w @relix/web\"",
+    "build": "npm run build -w @relix/api && npm run build -w @relix/web",
+    "typecheck": "npm run typecheck -w @relix/shared && npm run typecheck -w @relix/api && npm run typecheck -w @relix/web",
+    "lint": "oxlint apps packages",
+    "test": "npm run test -w @relix/api",
+    "db:migrate": "npm run db:migrate -w @relix/api",
+    "db:seed": "npm run db:seed -w @relix/api"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^24.13.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^9.2.1",
-    "oxlint": "^1.81.0",
-    "typescript": "~6.0.2",
-    "vite": "^8.3.0"
+    "oxlint": "^1.16.0"
   }
 }

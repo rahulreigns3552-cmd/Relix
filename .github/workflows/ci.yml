@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: relix
+          POSTGRES_PASSWORD: relix
+          POSTGRES_DB: relix_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U relix -d relix_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://relix:relix@127.0.0.1:5432/relix_test
+      JWT_SECRET: ci-test-secret
+      RELIX_WORKER_API_KEY: ci-worker-key
+      ADMIN_EMAIL: admin@relix.app
+      ADMIN_PASSWORD: change-me-please
+      WEB_ORIGIN: http://localhost:5173
+      SEED_ON_START: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

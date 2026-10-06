@@ -23,5 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local database credentials
+# Local secrets and runtime state
 .env
+**/.env
+!.env.example
+!apps/api/.env.example
+data/channel-sync-state.json
+apps/api/prisma/*.db

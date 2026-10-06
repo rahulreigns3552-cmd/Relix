@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: relix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-relix}
+      POSTGRES_DB: relix
+    volumes:
+      - relix-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relix -d relix"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://relix:${POSTGRES_PASSWORD:-relix}@postgres:5432/relix
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      RELIX_WORKER_API_KEY: ${RELIX_WORKER_API_KEY:-dev-worker-key}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@relix.app}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-please}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      RELIX_LEAD_SINK_EMAIL: ${RELIX_LEAD_SINK_EMAIL:-}
+      RELIX_BRIDGE_WEBHOOK: ${RELIX_BRIDGE_WEBHOOK:-}
+      RELIX_BRIDGE_WEBHOOK_AUTH: ${RELIX_BRIDGE_WEBHOOK_AUTH:-}
+      SEED_ON_START: "true"
+      PORT: "8787"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8787"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "${RELIX_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  relix-pg:

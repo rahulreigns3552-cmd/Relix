@@ -1,77 +1,183 @@
-# Relix — Agent Team Control Panel
+# Relix
 
-Orange + white Vite/React control panel for Relix (Grok Bot). Chat is the post-login home; Instagram drafts go through Preview → approve / request changes → publish.
+Orange-and-white control panel for multi-brand social ops. Ask Relix drafts and answers inside one brand. Instagram posts leave the building only after an explicit approval (Preview, or an email `APPROVE` handled by the worker).
 
-## Quick start
+```
+apps/web     Vite + React UI
+apps/api     Express API (TypeScript) + Prisma
+packages/shared   shared UI types
+data/        legacy JSON imported by the seed (not the live database)
+```
+
+Postgres is the only database. Nginx serves the built UI and proxies `/api` and `/media` to the API, so the browser uses one origin.
+
+## Run with Docker
+
+Requires Docker Desktop (Windows or Mac) or Docker Engine (Linux).
 
 ```bash
+cp .env.example .env
+```
+
+Edit `.env` before you share the machine. At minimum set `JWT_SECRET`, `RELIX_WORKER_API_KEY`, and `ADMIN_PASSWORD` (more than 6 characters).
+
+```bash
+docker compose up --build
+```
+
+Open http://localhost:8080 and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `.env` (the example values are `admin@relix.app` / `change-me-please` until you change them).
+
+On first boot the API runs Prisma migrations, imports `data/` when the database is empty, and ensures the admin user. Sanctum and the other seeded brands show up for that admin.
+
+### Windows (PowerShell)
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+Then open http://localhost:8080.
+
+### Linux
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Stop with `docker compose down`. Add `-v` to drop the database volume.
+
+## Run without Docker
+
+Requirements: Node.js 22+, PostgreSQL 16.
+
+### Linux
+
+```bash
+sudo -u postgres psql -c "CREATE USER relix WITH PASSWORD 'relix' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE relix OWNER relix;"
+cp .env.example .env
 npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
-- **Vite UI:** http://localhost:5173 (binds `0.0.0.0`)
-- **API:** http://localhost:8787 (`/api` proxied from Vite)
-- **Demo login:** `admin@opslead.app` / `lead123`
+UI: http://localhost:5173 (Vite proxies `/api` and `/media` to port 8787).
 
-## How Relix processes work
+### Windows (PowerShell)
 
-Chat messages and Instagram actions are persisted under `data/`. Relix (Grok Bot) can:
+Install Node.js 22 and PostgreSQL 16, then create the database in `psql`:
 
-1. Poll the API (`GET /api/chat/pending`, `GET /api/ig/actions/pending`), or
-2. Read the JSON files directly, or
-3. Receive an optional webhook ping (`{ type, id }`) when a webhook URL is set in Settings.
-
-### Data files
-
-| File | Purpose |
-|------|---------|
-| `data/chat.json` | Full chat thread |
-| `data/chat-inbox.json` | Pending user messages for Relix |
-| `data/chat-archive.json` | Completed chat jobs |
-| `data/ig-queue.json` | Instagram preview items |
-| `data/ig-actions.json` | Pending publish / revise actions |
-| `data/settings.json` | Webhook URL and API settings |
-
-### Reply to chat
-
-```bash
-# List pending jobs
-curl -s http://localhost:8787/api/chat/pending | jq
-
-# Reply (text + optional attachments)
-curl -s -X POST http://localhost:8787/api/chat/reply \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "jobId": "JOB_ID",
-    "text": "Here is a draft caption.",
-    "attachments": [
-      { "type": "image", "url": "https://example.com/img.jpg" },
-      { "type": "pdf", "url": "/files/brief.pdf", "name": "Brief.pdf" },
-      {
-        "type": "ig_preview",
-        "imageUrl": "https://example.com/post.jpg",
-        "caption": "Sanctum mornings.",
-        "hashtags": ["#Sanctum", "#QuietLuxury"]
-      }
-    ]
-  }'
+```sql
+CREATE USER relix WITH PASSWORD 'relix' CREATEDB;
+CREATE DATABASE relix OWNER relix;
 ```
 
-### Instagram revise / complete
-
-```bash
-# After revising a post, push it back to pending preview
-curl -s -X POST http://localhost:8787/api/ig/POST_ID/update \
-  -H 'Content-Type: application/json' \
-  -d '{"caption":"Updated caption","hashtags":["#Sanctum"],"imageUrl":"..."}'
-
-# Mark a publish/revise action done
-curl -s -X POST http://localhost:8787/api/ig/actions/ACTION_ID/complete \
-  -H 'Content-Type: application/json' \
-  -d '{"result":"published"}'
+```powershell
+Copy-Item .env.example .env
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
 ```
 
-## Scripts
+`DATABASE_URL` in `.env` must match the user, password, and database you created. The API reads that file on startup.
 
-- `npm run dev` — API (8787) + Vite (5173) via concurrently
-- `npm run dev:api` / `npm run dev:web` — run separately
+## Checks
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+## Authentication
+
+The browser session is an httpOnly cookie named `relix_session` (HMAC JWT, 7 days). API clients may also send `Authorization: Bearer <jwt>`.
+
+Every `/api` route except `GET /api/health`, `POST /api/auth/login`, and `POST /api/auth/signup` returns **401** without a session or the worker key. Project routes return **403** when the signed-in user does not own the project. The seeded admin can see every project.
+
+`GET /media/...` is served by the API (and proxied by Nginx) so preview images load on the same origin.
+
+CORS allows only `WEB_ORIGIN` (comma-separated). Set `COOKIE_SECURE=true` behind HTTPS.
+
+Change the account password from Settings. That call is `POST /api/auth/password` with the current and new password. Goals and briefs are stored per project (`GET/PUT /api/projects/:id/goals`, `GET/POST/DELETE /api/projects/:id/briefs`).
+
+## Worker API contract
+
+External automations send this header on every worker call:
+
+```
+X-Relix-Worker-Key: <RELIX_WORKER_API_KEY>
+```
+
+There is no query-string key and no bearer token for workers. A missing or wrong key is **401** with `{ "error": "worker API key required" }`.
+
+Paths and JSON bodies are unchanged. Base URL on the host is `http://127.0.0.1:8787` (or the public origin plus `/api` when you go through Nginx).
+
+| Method and path | Who |
+|---|---|
+| `GET /api/chat/pending-all` | worker |
+| `GET /api/projects/:pid/chat/pending` | worker |
+| `POST /api/projects/:pid/chat/reply` | worker |
+| `POST /api/chat/reply` | worker, body includes `projectId` |
+| `GET /api/projects/:pid/ig/queue` | signed-in user **or** worker |
+| `POST /api/projects/:pid/ig/queue` | worker |
+| `POST /api/projects/:pid/ig/morning-draft` | worker |
+| `POST /api/projects/:pid/ig/:id/update` | worker |
+| `POST /api/projects/:pid/ig/:id/email-sent` | worker |
+| `POST /api/projects/:pid/ig/:id/approve` | user **or** worker (`via: "email"` for an email APPROVE) |
+| `POST /api/projects/:pid/ig/:id/request-changes` | user or worker |
+| `POST /api/projects/:pid/ig/:id/reject` | user or worker |
+| `GET /api/projects/:pid/ig/actions/pending` | worker |
+| `GET /api/ig/actions/pending-all` | worker |
+| `POST /api/projects/:pid/ig/actions/:id/complete` | worker |
+| `POST /api/ig/actions/:id/complete` | worker, body includes `projectId` |
+| `POST /api/projects/:pid/ig/:id/retry` | user or worker |
+| `POST /api/projects/:pid/analytics/sync` | worker |
+| `GET /api/bridge/settings` and `POST /api/bridge/settings` | worker |
+| `GET /api/provision/queue` | worker |
+| `POST /api/provision/:jobId/complete` | worker |
+| `GET /api/channel-jobs?status=pending` | worker |
+| `POST /api/channel-jobs/:id/result` | worker |
+| `GET /api/leads/pending` and `POST /api/leads/:id/sent` | worker |
+
+### Publish lifecycle
+
+Approving a preview creates a pending `publish` action. Nothing is posted before that.
+
+`POST .../ig/actions/:id/complete` with a publish action:
+
+- Success (`result` omitted, `"published"`, or an object without `error` / `status: "failed"`) sets the queue item to `published` and stores `externalPostId` from `result.externalPostId`, `result.zernioPostId`, or `result.postId`. The legacy `zernioPostId` field is still written for older workers.
+- Failure (`result.error`, `result.status: "failed"`, or `result.ok: false`) sets the queue item and the action to `failed`.
+- `POST /api/projects/:pid/ig/:id/retry` on a `failed` item queues a new publish action. It does not approve a draft that was never approved.
+
+Chat block shapes (question cards and connector cards) are in [CHAT-BLOCKS.md](CHAT-BLOCKS.md).
+
+## Environment
+
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Postgres connection string |
+| `POSTGRES_PASSWORD` | Password compose gives the `postgres` service |
+| `JWT_SECRET` | Signs session cookies |
+| `RELIX_WORKER_API_KEY` | Worker header secret |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Seeded admin. Password is not reset if the user already exists |
+| `WEB_ORIGIN` | Allowed browser origins |
+| `COOKIE_SECURE` | `true` when the site is HTTPS |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` | Ask Relix replies. Model defaults to `gpt-4o-mini` |
+| `RELIX_LEAD_SINK_EMAIL` | Optional address stored on completed-chat leads |
+| `RELIX_BRIDGE_WEBHOOK` / `RELIX_BRIDGE_WEBHOOK_AUTH` | Optional wake-up POST when chat or provision jobs are queued |
+| `PORT` | API port (default `8787`) |
+| `RELIX_PORT` | Host port mapped to Nginx (default `8080`) |
+| `SEED_ON_START` | Import `data/` when the database has no projects (`true` by default) |
+
+Do not commit `.env`, API keys, or `data/channel-sync-state.json`.
+
+## Product rules
+
+- The posting-provider name is not shown in the UI. Connector cards say "Connector".
+- Approve, Request changes, and Reject stay on Preview. A failed publish can be retried; that is not a new approval.
+- Ask Relix stays inside the brand's posts, drafts, approvals, captions, calendar, and channels. Out-of-scope replies use the existing refusal text and an app-options card.
