@@ -11,7 +11,7 @@ RUN npm ci
 COPY apps/api apps/api
 COPY apps/worker apps/worker
 COPY packages/shared packages/shared
-RUN npm run build -w @relix/api
+RUN npm run build -w @relix/shared && npm run build -w @relix/api
 
 ENV WORKER_PORT=8790
 EXPOSE 8790

@@ -15,7 +15,8 @@ RUN npm ci
 COPY apps/api apps/api
 COPY packages/shared packages/shared
 COPY data data
-RUN npm run build -w @relix/api \
+RUN npm run build -w @relix/shared \
+  && npm run build -w @relix/api \
   && chmod +x apps/api/docker-entrypoint.sh
 
 ENV PORT=8787

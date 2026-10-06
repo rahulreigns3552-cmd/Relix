@@ -10,7 +10,7 @@ RUN npm ci
 
 COPY apps/web apps/web
 COPY packages/shared packages/shared
-RUN npm run build -w @relix/web
+RUN npm run build -w @relix/shared && npm run build -w @relix/web
 
 FROM nginx:1.27-alpine
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
