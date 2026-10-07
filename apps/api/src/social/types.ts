@@ -18,6 +18,14 @@ export interface PublishResult {
   externalPostId: string;
   status: string;
   error?: string;
+  metrics?: {
+    impressions?: number;
+    reach?: number;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    saves?: number;
+  };
 }
 
 export interface ConnectedAccount {

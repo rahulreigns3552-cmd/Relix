@@ -27,7 +27,13 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
       RELIX_LEAD_SINK_EMAIL: ${RELIX_LEAD_SINK_EMAIL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       RELIX_BRIDGE_WEBHOOK: ${RELIX_BRIDGE_WEBHOOK:-http://worker:8790/wake}
       RELIX_BRIDGE_WEBHOOK_AUTH: ${RELIX_BRIDGE_WEBHOOK_AUTH:-dev-worker-key}
       SOCIAL_PROVIDER: ${SOCIAL_PROVIDER:-none}
@@ -48,7 +54,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-      start_period: 20s
+      start_period: 40s
 
   web:
     build:
@@ -57,7 +63,8 @@ services:
     ports:
       - "${RELIX_PORT:-8080}:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   worker:
     build:
@@ -68,6 +75,14 @@ services:
       RELIX_WORKER_API_KEY: ${RELIX_WORKER_API_KEY:-dev-worker-key}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
+      WORKER_IMAGEGEN_ENABLED: ${WORKER_IMAGEGEN_ENABLED:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      RELIX_LEAD_SINK_EMAIL: ${RELIX_LEAD_SINK_EMAIL:-}
       SOCIAL_PROVIDER: ${SOCIAL_PROVIDER:-none}
       ZERNIO_API_KEY: ${ZERNIO_API_KEY:-}
       AYRSHARE_API_KEY: ${AYRSHARE_API_KEY:-}

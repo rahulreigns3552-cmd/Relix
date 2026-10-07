@@ -8,9 +8,9 @@ Start it with `npm run worker` from the repo root (API already running), or let 
 
 ## Schedule
 
-Every `WORKER_INTERVAL_SECONDS` seconds (default 60, minimum 5) the worker runs one tick: chat replies, channel sync, publish, then provision. A tick already in progress is skipped.
+Every `WORKER_INTERVAL_SECONDS` seconds (default 60, minimum 5) the worker runs one tick: chat replies, channel sync, publish, provision, email, analytics, then images. A tick already in progress is skipped. Each job is isolated: one failure is logged and the next job still runs.
 
-The API can also wake a tick immediately. Set `RELIX_BRIDGE_WEBHOOK` to `http://worker:8790/wake` (compose does this by default). The API sends `Authorization: Bearer <RELIX_BRIDGE_WEBHOOK_AUTH>`. That value must equal `RELIX_WORKER_API_KEY`. The worker also accepts the same secret in `X-Relix-Worker-Key`. `GET /health` on the worker needs no key.
+The API wakes a tick by POSTing to the in-repo worker. Compose sets `RELIX_BRIDGE_WEBHOOK` to `http://worker:8790/wake`. When that variable is empty outside Compose, the API uses `http://127.0.0.1:8790/wake`. Auth is `RELIX_BRIDGE_WEBHOOK_AUTH`, or `RELIX_WORKER_API_KEY` when the auth variable is empty. The worker accepts that secret as `Authorization: Bearer` or `X-Relix-Worker-Key`. `GET /health` on the worker needs no key. You do not point this at a scheduler outside the repo.
 
 A failed tick is logged. The next interval runs anyway. One job throwing does not roll back the jobs that already finished in that tick.
 
@@ -113,7 +113,51 @@ Media paths that start with `/` are prefixed with `PUBLIC_BASE_URL` so the provi
 | Output | Job marked done |
 | Env | Worker API env only |
 
-No external side effects. A job that is not `pending` is left alone.
+For each pending job the worker builds six local roles (strategy, content, creative, publishing, analytics, marketing), a channel id, and the brand name, then `POST /api/provision/:jobId/complete`. Nothing is created in an external chat or agent product. A job that is not `pending` is left alone.
+
+## Email
+
+`apps/worker/src/jobs/emails.ts` and `apps/worker/src/mail.ts`
+
+| | |
+|---|---|
+| Trigger | Same tick |
+| Endpoints | `GET /api/leads/pending`, `POST /api/leads/:id/sent`, `GET /api/ig/awaiting-email`, `POST /api/projects/:pid/ig/:id/email-sent` |
+| Input | Finished chats, and pending previews that have not been emailed |
+| Output | Plain-text SMTP message. Approval mail contains an APPROVE link |
+| Env | `SMTP_HOST`, `SMTP_PORT` (default 587), `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `RELIX_LEAD_SINK_EMAIL` |
+
+Finished-chat mail goes to the address stored on the lead (`RELIX_LEAD_SINK_EMAIL` when the chat was captured). Approval mail goes to the project owner. The link is `GET /api/ig/email-action?token=...`, signed with `JWT_SECRET`. Opening it approves that preview (`via: email`) and redirects to Preview. It does not publish.
+
+If any SMTP value is missing, the job logs and sends nothing. A send error leaves the lead or the preview unsent so the next tick can retry. Gmail is only an SMTP server here (app password); there is no Gmail connector.
+
+## Analytics
+
+`apps/worker/src/jobs/analytics.ts`
+
+| | |
+|---|---|
+| Trigger | Same tick |
+| Endpoints | `GET /api/worker/projects`, `GET /api/projects/:pid/ig/queue`, `POST /api/projects/:pid/analytics/sync` |
+| Input | Projects that have a provider profile, and published items with an external id |
+| Output | Account handle and any metrics the provider returned |
+| Env | `SOCIAL_PROVIDER` and that provider's key |
+
+With `SOCIAL_PROVIDER=none` the job logs and skips. A provider error on one brand does not stop the others. Metrics are written only when the provider actually returned numbers, so a status check cannot zero out existing analytics.
+
+## Images
+
+`apps/worker/src/jobs/image-gen.ts`
+
+| | |
+|---|---|
+| Trigger | Same tick |
+| Endpoints | `GET /api/ig/needs-image`, `GET /api/projects/:pid/brand-references`, `POST .../generated-image`, and `POST .../ig/:id/update` for a revision |
+| Input | Pending items with no image, or a pending revise action, plus png/jpg/webp files under `apps/api/public/media/brands/<projectId>/` |
+| Output | A file under `public/media/generated/<projectId>/` and an updated preview. Status stays unapproved |
+| Env | `WORKER_IMAGEGEN_ENABLED` (default `false`), `OPENAI_API_KEY`, `OPENAI_IMAGE_MODEL` (default `gpt-image-1`) |
+
+The job calls OpenAI image edits with the brand reference files attached. Sanctum ships `logo.png` and `box.png` in that folder. When the flag is false, or the key is missing, or a brand has no reference image, the job logs and leaves the queue item alone. It never approves and never publishes.
 
 ## Connect path (API, not a worker job)
 

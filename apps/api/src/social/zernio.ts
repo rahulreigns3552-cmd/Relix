@@ -209,10 +209,23 @@ export class ZernioProvider implements SocialProvider {
   async getPostStatus(externalPostId: string): Promise<PublishResult> {
     const data = await this.request('GET', `/posts/${encodeURIComponent(externalPostId)}`);
     const post = asRecord(data.post || data);
+    const metrics = asRecord(post.analytics || post.metrics);
+    const read = (key: string) => {
+      const value = Number(metrics[key]);
+      return Number.isFinite(value) ? value : undefined;
+    };
+    const impressions = read('impressions');
+    const reach = read('reach');
+    const likes = read('likes');
+    const comments = read('comments');
+    const shares = read('shares');
+    const saves = read('saves');
+    const hasMetrics = [impressions, reach, likes, comments, shares, saves].some((value) => value != null);
     return {
       externalPostId,
       status: firstString(post.status) || 'unknown',
       error: firstString(post.error) || undefined,
+      metrics: hasMetrics ? { impressions, reach, likes, comments, shares, saves } : undefined,
     };
   }
 

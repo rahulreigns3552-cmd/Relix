@@ -32,6 +32,14 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
+test('seed can run twice without duplicating projects', async () => {
+  const before = await prisma.project.count();
+  await prepareDatabase();
+  const after = await prisma.project.count();
+  expect(after).toBe(before);
+  expect(after).toBeGreaterThan(0);
+});
+
 test('unauthenticated API calls are rejected', async () => {
   const res = await request(app).get('/api/projects');
   expect(res.status).toBe(401);

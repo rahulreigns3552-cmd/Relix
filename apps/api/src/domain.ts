@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { RELIX_AGENT_SYSTEM_PROMPT, scrubVendorText } from '@relix/shared';
+import { signEmailAction, verifyEmailAction } from './email-token.js';
 import { prepareDatabase } from './seed.js';
 import {
   getSocialProvider,
@@ -186,11 +187,21 @@ function readBridgeSettings() {
   return readJson(path.join(DATA_DIR, 'bridge-settings.json'), { webhookUrl: '' });
 }
 
+function workerWakeUrl() {
+  const settings = readBridgeSettings();
+  const fromSettings = String(settings.webhookUrl || '').trim();
+  if (fromSettings) return fromSettings;
+  const fromEnv = String(process.env.RELIX_BRIDGE_WEBHOOK || '').trim();
+  if (fromEnv) return fromEnv;
+  const port = Number(process.env.WORKER_PORT || 8790);
+  return `http://127.0.0.1:${port}/wake`;
+}
+
 function pingBridgeWebhook(payload) {
   const settings = readBridgeSettings();
-  const url = String(settings.webhookUrl || process.env.RELIX_BRIDGE_WEBHOOK || '').trim();
+  const url = workerWakeUrl();
   if (!url) return;
-  const auth = String(settings.webhookAuth || process.env.RELIX_BRIDGE_WEBHOOK_AUTH || '').trim();
+  const auth = String(settings.webhookAuth || process.env.RELIX_BRIDGE_WEBHOOK_AUTH || process.env.RELIX_WORKER_API_KEY || '').trim();
   const headers = { 'Content-Type': 'application/json' };
   if (auth) headers.Authorization = /^(Bearer|Basic)\s/i.test(auth) ? auth : `Bearer ${auth}`;
   fetch(url, {
@@ -935,6 +946,7 @@ function routeKind(req) {
   if (method === 'POST' && (p === '/api/auth/login' || p === '/api/auth/signup')) return 'public';
   if (method === 'GET' && (p === '/api/channels/callback' || p === '/api/channels/go')) return 'public';
   if (method === 'POST' && p === '/api/channels/callback/select') return 'public';
+  if (method === 'GET' && p === '/api/ig/email-action') return 'public';
   const worker =
     (method === 'GET' && p === '/api/bridge/settings') ||
     (method === 'POST' && p === '/api/bridge/settings') ||
@@ -957,12 +969,17 @@ function routeKind(req) {
     (method === 'POST' && /^\/api\/projects\/[^/]+\/ig\/[^/]+\/email-sent$/.test(p)) ||
     (method === 'POST' && /^\/api\/projects\/[^/]+\/ig\/morning-draft$/.test(p)) ||
     (method === 'POST' && /^\/api\/projects\/[^/]+\/analytics\/sync$/.test(p)) ||
-    (method === 'POST' && /^\/api\/projects\/[^/]+\/channels\/[^/]+\/sync$/.test(p));
+    (method === 'POST' && /^\/api\/projects\/[^/]+\/channels\/[^/]+\/sync$/.test(p)) ||
+    (method === 'GET' && p === '/api/worker/projects') ||
+    (method === 'GET' && p === '/api/ig/awaiting-email') ||
+    (method === 'GET' && p === '/api/ig/needs-image') ||
+    (method === 'POST' && /^\/api\/projects\/[^/]+\/ig\/[^/]+\/generated-image$/.test(p));
   if (worker) return 'worker';
   const either =
     /^\/api\/projects\/[^/]+\/ig\/[^/]+\/(approve|request-changes|reject|retry)$/.test(p) ||
     (method === 'GET' && /^\/api\/projects\/[^/]+\/ig\/queue$/.test(p)) ||
-    (method === 'GET' && /^\/api\/projects\/[^/]+\/channels$/.test(p));
+    (method === 'GET' && /^\/api\/projects\/[^/]+\/channels$/.test(p)) ||
+    (method === 'GET' && /^\/api\/projects\/[^/]+\/brand-references$/.test(p));
   if (either) return 'either';
   return 'user';
 }
@@ -1016,7 +1033,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: false }));
 app.use((req, res, next) => {
   runExclusive(async () => {
@@ -1487,7 +1504,9 @@ app.get('/api/projects/:projectId/chat/pending', requireProject, (req, res) => {
 });
 
 
-const LEAD_TO = String(process.env.RELIX_LEAD_SINK_EMAIL || '').trim();
+function leadSinkEmail() {
+  return String(process.env.RELIX_LEAD_SINK_EMAIL || '').trim();
+}
 const LEADS_FILE = path.join(DATA_DIR, 'chat-leads.json');
 const LEAD_TEXT_MAX = 1000;
 
@@ -1568,7 +1587,7 @@ function recordCompletedChatLead(projectId, chat) {
         id: uid('lead'),
         projectId,
         createdAt: pair.assistant.createdAt || now,
-        to: LEAD_TO,
+        to: leadSinkEmail(),
         exchangeKey: leadExchangeKey(projectId, pair.user.id, pair.assistant.id),
         transcript: [
           { role: 'user', text: userText },
@@ -2102,39 +2121,42 @@ app.post('/api/projects/:projectId/ig/queue', requireProject, (req, res) => {
   res.json({ ok: true, item, queue });
 });
 
-app.post('/api/projects/:projectId/ig/:id/approve', requireProject, (req, res) => {
-  const queue = readJson(req.files.igQueue, { items: [] });
-  const actions = readJson(req.files.igActions, { actions: [] });
-  const item = queue.items.find((i) => i.id === req.params.id);
-  if (!item) return res.status(404).json({ error: 'not found' });
+function applyApproval(projectId, itemId, via) {
+  const files = projectFiles(projectId);
+  const queue = readJson(files.igQueue, { items: [] });
+  const actions = readJson(files.igActions, { actions: [] });
+  const item = (queue.items || []).find((i) => i.id === itemId);
+  if (!item) return { error: 'not found', status: 404 };
   if (!['pending', 'changes_requested'].includes(item.status)) {
-    return res.status(409).json({ error: `already ${item.status}` });
+    return { error: `already ${item.status}`, status: 409, item };
   }
-
   item.status = 'approved';
   item.updatedAt = new Date().toISOString();
   item.approvedAt = item.updatedAt;
-  item.approvedVia = String(req.body?.via || 'relix');
+  item.approvedVia = String(via || 'relix');
   item.feedback = null;
-
   const action = {
     id: uid('iga'),
     postId: item.id,
     action: 'publish',
     status: 'pending',
-    projectId: req.projectId,
+    projectId,
     publishOn: item.postDate || null,
     publishTimeIst: item.timeIst || '10:10',
     post: { ...item },
     createdAt: new Date().toISOString(),
   };
   actions.actions.push(action);
+  writeJson(files.igQueue, queue);
+  writeJson(files.igActions, actions);
+  pingWebhook(projectId, 'ig_publish', action.id);
+  return { item, action };
+}
 
-  writeJson(req.files.igQueue, queue);
-  writeJson(req.files.igActions, actions);
-  pingWebhook(req.projectId, 'ig_publish', action.id);
-
-  res.json({ ok: true, item, action });
+app.post('/api/projects/:projectId/ig/:id/approve', requireProject, (req, res) => {
+  const applied = applyApproval(req.projectId, req.params.id, req.body?.via || 'relix');
+  if (applied.error) return res.status(applied.status || 400).json({ error: applied.error });
+  res.json({ ok: true, item: applied.item, action: applied.action });
 });
 
 app.post('/api/projects/:projectId/ig/:id/request-changes', requireProject, (req, res) => {
@@ -3286,6 +3308,146 @@ app.post('/api/projects/:projectId/channels/:platform/sync', requireProject, req
   res.json({ ok: true, channel });
 });
 
+function brandDir(projectId) {
+  return path.join(PUBLIC_MEDIA, 'brands', projectId);
+}
+
+function safeBrandFile(name) {
+  const base = path.basename(String(name || ''));
+  if (!/^[a-z0-9][a-z0-9._-]{0,80}$/i.test(base)) return '';
+  if (!/\.(png|jpe?g|webp)$/i.test(base)) return '';
+  return base;
+}
+
+app.get('/api/worker/projects', (_req, res) => {
+  res.json({
+    projects: listProjects().map((project) => ({
+      id: project.id,
+      name: project.name,
+      ownerEmail: project.ownerEmail || '',
+      providerProfileRef: project.providerProfileRef || null,
+    })),
+  });
+});
+
+app.get('/api/projects/:projectId/brand-references', requireProject, (req, res) => {
+  const dir = brandDir(req.projectId);
+  const files = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter((name) => safeBrandFile(name)).map((name) => ({
+      name,
+      url: `/media/brands/${req.projectId}/${name}`,
+    }))
+    : [];
+  res.json({ files });
+});
+
+app.post('/api/projects/:projectId/brand-references', requireProject, (req, res) => {
+  const name = safeBrandFile(req.body?.filename);
+  const data = String(req.body?.dataBase64 || '');
+  if (!name || !data) return res.status(400).json({ error: 'filename and dataBase64 required' });
+  const bytes = Buffer.from(data, 'base64');
+  if (!bytes.length || bytes.length > 8 * 1024 * 1024) return res.status(400).json({ error: 'image is empty or too large' });
+  const dir = brandDir(req.projectId);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, name), bytes);
+  res.json({ ok: true, file: { name, url: `/media/brands/${req.projectId}/${name}` } });
+});
+
+app.get('/api/ig/awaiting-email', (_req, res) => {
+  const secret = String(process.env.JWT_SECRET || '');
+  const items = [];
+  for (const project of listProjects()) {
+    const queue = readJson(projectFiles(project.id).igQueue, { items: [] });
+    for (const item of queue.items || []) {
+      if (item.status !== 'pending') continue;
+      if (item.approvalEmail?.sentAt) continue;
+      const to = String(project.ownerEmail || '').trim();
+      if (!to) continue;
+      const token = signEmailAction({ projectId: project.id, itemId: item.id, action: 'approve' }, secret);
+      items.push({
+        projectId: project.id,
+        id: item.id,
+        caption: String(item.caption || ''),
+        to,
+        approveUrl: `${publicBaseUrl()}/api/ig/email-action?token=${encodeURIComponent(token)}`,
+      });
+    }
+  }
+  res.json({ items });
+});
+
+app.get('/api/ig/email-action', (req, res) => {
+  const secret = String(process.env.JWT_SECRET || '');
+  const parsed = verifyEmailAction(String(req.query.token || ''), secret);
+  if (!parsed) {
+    return res.status(400).type('html').send('<!doctype html><title>Relix</title><p>This approval link is not valid or has expired.</p>');
+  }
+  const applied = applyApproval(parsed.projectId, parsed.itemId, 'email');
+  const dest = `${publicBaseUrl()}/p/${encodeURIComponent(parsed.projectId)}/preview`;
+  if (applied.error && applied.status !== 409) {
+    return res.status(applied.status || 400).type('html').send('<!doctype html><title>Relix</title><p>This post could not be approved.</p>');
+  }
+  res.redirect(302, dest);
+});
+
+app.get('/api/ig/needs-image', (_req, res) => {
+  const items = [];
+  for (const project of listProjects()) {
+    const files = projectFiles(project.id);
+    const queue = readJson(files.igQueue, { items: [] });
+    const actions = readJson(files.igActions, { actions: [] });
+    for (const action of actions.actions || []) {
+      if (action.action !== 'revise' || action.status !== 'pending' || !action.postId) continue;
+      const item = (queue.items || []).find((row) => row.id === action.postId);
+      if (!item || ['approved', 'published', 'rejected'].includes(item.status)) continue;
+      items.push({
+        projectId: project.id,
+        id: item.id,
+        kind: 'revise',
+        actionId: action.id,
+        caption: String(item.caption || ''),
+        hashtags: item.hashtags || [],
+        feedback: String(action.feedback || item.feedback || ''),
+      });
+    }
+    for (const item of queue.items || []) {
+      if (!['pending', 'changes_requested'].includes(item.status)) continue;
+      const missing = !String(item.imageUrl || '').trim() || item.needsImage === true;
+      if (!missing) continue;
+      if (items.some((row) => row.projectId === project.id && row.id === item.id)) continue;
+      items.push({
+        projectId: project.id,
+        id: item.id,
+        kind: 'missing',
+        caption: String(item.caption || ''),
+        hashtags: item.hashtags || [],
+        feedback: String(item.feedback || ''),
+      });
+    }
+  }
+  res.json({ items });
+});
+
+app.post('/api/projects/:projectId/ig/:id/generated-image', requireProject, (req, res) => {
+  const queue = readJson(req.files.igQueue, { items: [] });
+  const item = (queue.items || []).find((row) => row.id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'not found' });
+  if (['approved', 'published', 'rejected'].includes(item.status)) {
+    return res.status(409).json({ error: `already ${item.status}` });
+  }
+  const bytes = Buffer.from(String(req.body?.dataBase64 || ''), 'base64');
+  if (!bytes.length) return res.status(400).json({ error: 'dataBase64 required' });
+  const dir = path.join(PUBLIC_MEDIA, 'generated', req.projectId);
+  fs.mkdirSync(dir, { recursive: true });
+  const filename = `${item.id.replace(/[^a-z0-9_-]/gi, '')}.png`;
+  fs.writeFileSync(path.join(dir, filename), bytes);
+  item.imageUrl = `/media/generated/${req.projectId}/${filename}`;
+  item.needsImage = false;
+  item.updatedAt = new Date().toISOString();
+  writeJson(req.files.igQueue, queue);
+  res.json({ ok: true, item: { id: item.id, status: item.status, imageUrl: item.imageUrl } });
+});
+
 app.use((err, _req, res, _next) => {
   console.error('[relix-api] unhandled error', err);
   if (!res.headersSent) res.status(500).json({ error: 'internal error' });
@@ -3317,8 +3479,9 @@ export function createApp() {
 
 export async function start() {
   await bootState();
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[relix-api] http://0.0.0.0:${PORT}`);
+  const port = Number(process.env.PORT || 8787);
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`[relix-api] http://0.0.0.0:${port}`);
     console.log('[relix-api] store: postgres');
     console.log(`[relix-api] projects: ${listProjects().map((p) => p.id).join(', ') || '(none yet)'}`);
   });

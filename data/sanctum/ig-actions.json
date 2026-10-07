@@ -146,7 +146,7 @@
       "action": "revise",
       "status": "done",
       "projectId": "sanctum",
-      "feedback": "you are generate grok images. you need to generate images through chatgot and give me right",
+      "feedback": "Please generate the next image in Relix from the Sanctum logo and box references.",
       "post": {
         "id": "ig-1790579880300-0atphf",
         "platform": "instagram",
@@ -161,7 +161,7 @@
           "#DataSovereignty"
         ],
         "status": "changes_requested",
-        "feedback": "you are generate grok images. you need to generate images through chatgot and give me right",
+        "feedback": "Please generate the next image in Relix from the Sanctum logo and box references.",
         "calendarPostId": "SAN-W2-MON-0929",
         "expiresAt": "2026-09-30T04:30:00.000Z",
         "createdAt": "2026-09-28T07:18:00.300Z",

@@ -1,6 +1,22 @@
 # Relix
 
-Orange-and-white control panel for multi-brand social ops. Ask Relix drafts and answers inside one brand. Instagram posts leave the building only after an explicit approval (Preview, or an email `APPROVE` handled by the worker).
+Orange-and-white control panel for multi-brand social ops. Ask Relix drafts and answers inside one brand. Instagram posts leave the building only after an explicit approval (Preview, or an email APPROVE link handled by the worker).
+
+## Quick start
+
+```bash
+cp .env.example .env
+```
+
+Set `JWT_SECRET`, `RELIX_WORKER_API_KEY`, and `ADMIN_PASSWORD` (more than 6 characters). OpenAI, SMTP, and the posting provider can stay empty.
+
+```bash
+docker compose up -d --build
+```
+
+Open http://localhost:8080 and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Compose starts Postgres, migrates, imports `data/`, and runs the API, Nginx, and the worker. Step-by-step for Windows, macOS, and Linux, including where to get keys: [docs/SETUP.md](docs/SETUP.md). Folder map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Jobs: [docs/AGENTS.md](docs/AGENTS.md).
+
+Without Docker: `npm install`, `npm run check-env`, `npm run db:migrate`, `npm run dev` (API, UI, and worker). UI: http://localhost:5173.
 
 ```
 apps/web     Vite + React UI

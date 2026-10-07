@@ -7,7 +7,24 @@ import { prisma } from './store.js';
 
 const DATA_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../data');
 
-const LEGACY_DEMO_EMAIL = 'admin@opslead.app';
+function loadEnvFiles(): void {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  for (const file of [path.resolve(here, '../.env'), path.resolve(here, '../../../.env')]) {
+    if (!fs.existsSync(file)) continue;
+    for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq <= 0) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let val = trimmed.slice(eq + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (process.env[key] == null || process.env[key] === '') process.env[key] = val;
+    }
+  }
+}
 
 function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString('hex');
@@ -65,7 +82,8 @@ async function importUsers(ownerEmail: string): Promise<void> {
     const passwordHash = String(user.passwordHash || '');
     if (!email || !passwordHash || email === ownerEmail) continue;
     const createdAt = user.createdAt ? new Date(String(user.createdAt)) : new Date();
-    const hash = email === LEGACY_DEMO_EMAIL ? hashPassword(crypto.randomBytes(24).toString('hex')) : passwordHash;
+    // Never reuse a password hash from the JSON snapshot. The only login is ADMIN_EMAIL.
+    const hash = hashPassword(crypto.randomBytes(24).toString('hex'));
     await prisma.user.upsert({
       where: { email },
       create: {
@@ -87,8 +105,8 @@ async function importProjects(ownerEmail: string): Promise<void> {
     const id = String(project.id || '').trim();
     if (!id) continue;
     const createdAt = project.createdAt ? new Date(String(project.createdAt)) : new Date();
-    let owner = String(project.ownerEmail || '').trim().toLowerCase();
-    if (!owner || owner === LEGACY_DEMO_EMAIL) owner = ownerEmail;
+    // Every seeded brand belongs to the admin from .env, not to an address stored in the JSON snapshot.
+    const owner = ownerEmail;
     await prisma.project.upsert({
       where: { id },
       create: {
@@ -173,8 +191,6 @@ async function importGlobals(): Promise<void> {
 }
 
 export async function importLegacyJson(): Promise<{ imported: boolean }> {
-  const count = await prisma.project.count();
-  if (count > 0) return { imported: false };
   if (!fs.existsSync(path.join(DATA_DIR, 'projects.json'))) return { imported: false };
   const owner = adminEmail();
   await importUsers(owner);
@@ -184,6 +200,7 @@ export async function importLegacyJson(): Promise<{ imported: boolean }> {
 }
 
 export async function prepareDatabase(options: { skipImport?: boolean } = {}): Promise<void> {
+  loadEnvFiles();
   if (!options.skipImport) await importLegacyJson();
   await ensureAdmin();
 }

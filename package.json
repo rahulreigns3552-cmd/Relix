@@ -8,7 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -k -n api,web -c orange,cyan \"npm run dev -w @relix/api\" \"npm run dev -w @relix/web\"",
+    "dev": "concurrently -k -n api,web,worker -c orange,cyan,green \"npm run dev -w @relix/api\" \"npm run dev -w @relix/web\" \"npm run dev -w @relix/worker\"",
+    "check-env": "node scripts/check-env.mjs",
     "worker": "npm run start -w @relix/worker",
     "build": "npm run build -w @relix/shared && npm run build -w @relix/api && npm run build -w @relix/web && npm run build -w @relix/worker",
     "typecheck": "npm run typecheck -w @relix/shared && npm run typecheck -w @relix/api && npm run typecheck -w @relix/web && npm run typecheck -w @relix/worker",
@@ -20,5 +21,8 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "oxlint": "^1.16.0"
+  },
+  "overrides": {
+    "shell-quote": "1.12.0"
   }
 }

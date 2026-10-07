@@ -1,8 +1,12 @@
 import http from 'node:http';
 import { getSocialProvider } from '@relix/api/social';
 import { createWorkerClient } from './api.js';
+import { smtpConfigFrom, sendSmtp } from './mail.js';
+import { runAnalytics } from './jobs/analytics.js';
 import { runChannelSync } from './jobs/channel-sync.js';
 import { runChatReplies } from './jobs/chat-replies.js';
+import { runEmails } from './jobs/emails.js';
+import { runImageGen } from './jobs/image-gen.js';
 import { runProvision } from './jobs/provision.js';
 import { runPublish } from './jobs/publish.js';
 
@@ -14,25 +18,45 @@ let ticking = false;
 async function tick() {
   if (ticking) return;
   ticking = true;
-  const client = createWorkerClient(String(process.env.RELIX_API_URL || 'http://127.0.0.1:8787'), workerKey);
+  const apiBase = String(process.env.RELIX_API_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
+  const client = createWorkerClient(apiBase, workerKey);
   const provider = getSocialProvider();
-  try {
-    await runChatReplies({
+  const log = (message: string) => console.log(`[relix-worker] ${message}`);
+  const jobs: [string, () => Promise<unknown>][] = [
+    ['chat', () => runChatReplies({
       client,
       apiKey: String(process.env.OPENAI_API_KEY || ''),
       model: String(process.env.OPENAI_MODEL || 'gpt-4o-mini'),
-    });
-    await runChannelSync({ client, provider });
-    await runPublish({
+      log,
+    })],
+    ['channels', () => runChannelSync({ client, provider })],
+    ['publish', () => runPublish({
       client,
       provider,
       publishEnabled: String(process.env.WORKER_PUBLISH_ENABLED || 'false') === 'true',
       publicBaseUrl: String(process.env.PUBLIC_BASE_URL || ''),
-      log: (message) => console.log(`[relix-worker] ${message}`),
-    });
-    await runProvision(client);
-  } catch (error) {
-    console.error('[relix-worker] tick failed', error instanceof Error ? error.message : 'error');
+      log,
+    })],
+    ['provision', () => runProvision(client)],
+    ['email', () => runEmails({ client, smtp: smtpConfigFrom(), send: (message) => sendSmtp(smtpConfigFrom()!, message), log })],
+    ['analytics', () => runAnalytics({ client, provider, log })],
+    ['images', () => runImageGen({
+      client,
+      apiKey: String(process.env.OPENAI_API_KEY || ''),
+      model: String(process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'),
+      enabled: String(process.env.WORKER_IMAGEGEN_ENABLED || 'false') === 'true',
+      apiBase,
+      log,
+    })],
+  ];
+  try {
+    for (const [name, job] of jobs) {
+      try {
+        await job();
+      } catch (error) {
+        console.error(`[relix-worker] ${name} failed`, error instanceof Error ? error.message : 'error');
+      }
+    }
   } finally {
     ticking = false;
   }

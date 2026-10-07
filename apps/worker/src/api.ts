@@ -10,7 +10,16 @@ export interface WorkerClient {
   syncChannel(projectId: string, platform: string, body: Record<string, unknown>): Promise<unknown>;
   syncAnalytics(projectId: string, body: Record<string, unknown>): Promise<unknown>;
   getProvisionQueue(): Promise<{ jobs: ProvisionJob[] }>;
-  completeProvision(id: string): Promise<unknown>;
+  completeProvision(id: string, body: Record<string, unknown>): Promise<unknown>;
+  getWorkerProjects(): Promise<{ projects: WorkerProject[] }>;
+  getPendingLeads(): Promise<{ leads: LeadRecord[] }>;
+  markLeadSent(id: string): Promise<unknown>;
+  getAwaitingEmail(): Promise<{ items: ApprovalMail[] }>;
+  markApprovalEmailSent(projectId: string, itemId: string, to: string): Promise<unknown>;
+  getImageWork(): Promise<{ items: ImageWork[] }>;
+  getBrandReferences(projectId: string): Promise<{ files: { name: string; url: string }[] }>;
+  saveGeneratedImage(projectId: string, itemId: string, dataBase64: string): Promise<{ item?: { imageUrl?: string; status?: string } }>;
+  updateIgItem(projectId: string, itemId: string, body: Record<string, unknown>): Promise<unknown>;
 }
 
 export interface ChatJob {
@@ -25,6 +34,8 @@ export interface QueueItem {
   caption?: string;
   imageUrl?: string;
   postDate?: string;
+  externalPostId?: string;
+  publishedAt?: string;
 }
 
 export interface PublishAction {
@@ -53,6 +64,40 @@ export interface WorkerChannel {
 export interface ProvisionJob {
   id: string;
   status?: string;
+  projectId?: string;
+  businessName?: string;
+  goal?: string;
+}
+
+export interface WorkerProject {
+  id: string;
+  name?: string;
+  ownerEmail?: string;
+  providerProfileRef?: string | null;
+}
+
+export interface LeadRecord {
+  id: string;
+  projectId?: string;
+  to?: string;
+  transcript?: { role: string; text: string }[];
+}
+
+export interface ApprovalMail {
+  projectId: string;
+  id: string;
+  caption?: string;
+  to: string;
+  approveUrl: string;
+}
+
+export interface ImageWork {
+  projectId: string;
+  id: string;
+  kind?: string;
+  caption?: string;
+  feedback?: string;
+  hashtags?: string[];
 }
 
 export function createWorkerClient(baseUrl: string, workerKey: string, fetchImpl: typeof fetch = fetch): WorkerClient {
@@ -100,9 +145,27 @@ export function createWorkerClient(baseUrl: string, workerKey: string, fetchImpl
       body: JSON.stringify(body),
     }),
     getProvisionQueue: () => call('/api/provision/queue'),
-    completeProvision: (id) => call(`/api/provision/${encodeURIComponent(id)}/complete`, {
+    completeProvision: (id, body) => call(`/api/provision/${encodeURIComponent(id)}/complete`, {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify(body),
+    }),
+    getWorkerProjects: () => call('/api/worker/projects'),
+    getPendingLeads: () => call('/api/leads/pending'),
+    markLeadSent: (id) => call(`/api/leads/${encodeURIComponent(id)}/sent`, { method: 'POST', body: '{}' }),
+    getAwaitingEmail: () => call('/api/ig/awaiting-email'),
+    markApprovalEmailSent: (projectId, itemId, to) => call(`/api/projects/${encodeURIComponent(projectId)}/ig/${encodeURIComponent(itemId)}/email-sent`, {
+      method: 'POST',
+      body: JSON.stringify({ to, threadId: 'smtp', messageId: 'smtp' }),
+    }),
+    getImageWork: () => call('/api/ig/needs-image'),
+    getBrandReferences: (projectId) => call(`/api/projects/${encodeURIComponent(projectId)}/brand-references`),
+    saveGeneratedImage: (projectId, itemId, dataBase64) => call(`/api/projects/${encodeURIComponent(projectId)}/ig/${encodeURIComponent(itemId)}/generated-image`, {
+      method: 'POST',
+      body: JSON.stringify({ dataBase64 }),
+    }),
+    updateIgItem: (projectId, itemId, body) => call(`/api/projects/${encodeURIComponent(projectId)}/ig/${encodeURIComponent(itemId)}/update`, {
+      method: 'POST',
+      body: JSON.stringify(body),
     }),
   };
 }

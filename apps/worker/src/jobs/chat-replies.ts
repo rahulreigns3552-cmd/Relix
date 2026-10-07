@@ -6,10 +6,14 @@ export interface ChatDeps {
   apiKey: string;
   model: string;
   fetchImpl?: typeof fetch;
+  log?: (message: string) => void;
 }
 
 export async function runChatReplies(deps: ChatDeps): Promise<{ replied: number; skipped: number }> {
-  if (!deps.apiKey) return { replied: 0, skipped: 0 };
+  if (!deps.apiKey) {
+    deps.log?.('chat replies skipped; OPENAI_API_KEY is missing');
+    return { replied: 0, skipped: 0 };
+  }
   const fetchImpl = deps.fetchImpl || fetch;
   const { jobs } = await deps.client.getPendingChat();
   let replied = 0;

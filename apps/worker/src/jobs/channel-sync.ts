@@ -32,5 +32,24 @@ export async function runChannelSync(deps: {
     seen.add(key);
     updated += 1;
   }
+  const { projects } = await deps.client.getWorkerProjects();
+  for (const project of projects || []) {
+    if (!project.id || !project.providerProfileRef) continue;
+    const accounts = await deps.provider.listAccounts(project.providerProfileRef);
+    for (const account of accounts) {
+      const platform = account.platform === 'x' ? 'twitter' : account.platform;
+      const key = `${project.id}:${platform}`;
+      if (seen.has(key)) continue;
+      const username = account.username.replace(/^@/, '');
+      await deps.client.syncChannel(project.id, platform, {
+        status: 'connected',
+        username,
+        accountId: account.accountId,
+        message: username ? `Connected · @${username}` : 'Connected',
+      });
+      seen.add(key);
+      updated += 1;
+    }
+  }
   return { updated };
 }
