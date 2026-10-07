@@ -3,6 +3,9 @@
 Bot replies can carry interactive cards in addition to text. They travel in the
 existing `attachments` array of the chat reply endpoint.
 
+Worker calls send header `X-Relix-Worker-Key: <RELIX_WORKER_API_KEY>`.
+Do not put a posting-vendor name in `text`, widget `prompt` / `helpText`, or connector `name` / `description`. The UI shows "Connector" for that word. Use a generic connector name.
+
 ## Endpoints
 
 | Who | Method + path | Body |
@@ -14,7 +17,7 @@ existing `attachments` array of the chat reply endpoint.
 | UI  | `POST /api/projects/:pid/chat/connector-action` | `{ messageId, connectorId, url? }` |
 
 `jobId` is **required** and must be a pending chat job (every user message creates one).
-Base URL: `http://127.0.0.1:8787`.
+Base URL without Nginx: `http://127.0.0.1:8787`. Through the Docker site, use the same origin (for example `http://localhost:8080`).
 
 ## Block schemas
 
@@ -45,10 +48,10 @@ Base URL: `http://127.0.0.1:8787`.
 {
   "type": "connector",
   "connector": {
-    "id": "zernio-linkedin",             // unique within the message (auto-generated if omitted)
-    "name": "Zernio",
+    "id": "connector-linkedin",          // unique within the message (auto-generated if omitted)
+    "name": "Connector",
     "description": "one line, truncated in the UI",
-    "logoUrl": "/media/connectors/zernio.svg",   // optional; otherwise a coloured initial tile
+    "logoUrl": "/media/connectors/linkedin.svg", // optional; otherwise a coloured initial tile
     "tools": 52,                         // optional, shows "52 tools"
     "platform": "linkedin",              // optional: instagram | linkedin | twitter (x) | youtube | whatsapp | email (gmail)
     "action": "connect_channel",         // connect_channel | add_connector
@@ -71,7 +74,7 @@ For cards with a `platform`, status is **re-derived from the channel record on e
 every 2.5 s): channel `connected` → Added, `connecting` → Connecting..., `failed` (after the card was clicked) →
 Retry, otherwise Add. So bots can just post `"status": "available"`.
 
-Available logos: `/media/connectors/{zernio,linkedin,instagram,x,youtube,whatsapp,gmail}.svg`.
+Available logos: `/media/connectors/{linkedin,instagram,x,youtube,whatsapp,gmail}.svg`.
 
 ### Text
 `text` is plain text. Bare URLs and markdown links (`[label](https://…)`) in bot text render as short
@@ -83,6 +86,7 @@ link chips (domain or label) — don't paste long raw URLs expecting them to sho
 
 ```bash
 curl -s -X POST http://127.0.0.1:8787/api/projects/sanctum/chat/reply \
+  -H "X-Relix-Worker-Key: $RELIX_WORKER_API_KEY" \
   -H 'content-type: application/json' -d @- <<'JSON'
 {
   "jobId": "job_XXXXXXXX",
@@ -93,9 +97,9 @@ curl -s -X POST http://127.0.0.1:8787/api/projects/sanctum/chat/reply \
       "widget": {
         "id": "connect-linkedin",
         "prompt": "Should I connect your LinkedIn?",
-        "helpText": "I'll use Zernio so I can schedule and publish LinkedIn posts for you.",
+        "helpText": "I'll connect it so I can schedule and publish LinkedIn posts for you.",
         "options": [
-          { "label": "Yes", "value": "Yes, connect LinkedIn", "description": "Connect it via Zernio now", "style": "primary" },
+          { "label": "Yes", "value": "Yes, connect LinkedIn", "description": "Connect it now", "style": "primary" },
           { "label": "No", "value": "No, skip LinkedIn for now", "description": "Keep Instagram only" }
         ],
         "allowCustom": true
@@ -106,10 +110,11 @@ curl -s -X POST http://127.0.0.1:8787/api/projects/sanctum/chat/reply \
 JSON
 ```
 
-## Example (b) — Zernio connector card for LinkedIn (platform linkedin, 52 tools)
+## Example (b) — connector card for LinkedIn (platform linkedin, 52 tools)
 
 ```bash
 curl -s -X POST http://127.0.0.1:8787/api/projects/sanctum/chat/reply \
+  -H "X-Relix-Worker-Key: $RELIX_WORKER_API_KEY" \
   -H 'content-type: application/json' -d @- <<'JSON'
 {
   "jobId": "job_XXXXXXXX",
@@ -118,10 +123,10 @@ curl -s -X POST http://127.0.0.1:8787/api/projects/sanctum/chat/reply \
     {
       "type": "connector",
       "connector": {
-        "id": "zernio-linkedin",
-        "name": "Zernio",
+        "id": "connector-linkedin",
+        "name": "Connector",
         "description": "Schedule, publish and analyse LinkedIn posts for this brand",
-        "logoUrl": "/media/connectors/zernio.svg",
+        "logoUrl": "/media/connectors/linkedin.svg",
         "tools": 52,
         "platform": "linkedin",
         "action": "connect_channel",

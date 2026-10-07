@@ -1,0 +1,38 @@
+{
+  "name": "@relix/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "prisma generate && tsc -p tsconfig.json --noEmit",
+    "test": "prisma generate && vitest run",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@relix/shared": "*",
+    "@prisma/client": "6.12.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "exports": {
+    "./social": {
+      "development": "./src/social/index.ts",
+      "default": "./dist/social/index.js"
+    }
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.5.2",
+    "@types/supertest": "^6.0.3",
+    "prisma": "6.12.0",
+    "supertest": "^7.1.4",
+    "tsx": "^4.20.5",
+    "typescript": "~5.9.2",
+    "vitest": "^5.0.3"
+  }
+}

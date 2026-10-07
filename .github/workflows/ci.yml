@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: relix
+          POSTGRES_PASSWORD: relix
+          POSTGRES_DB: relix_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U relix -d relix_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgresql://relix:relix@127.0.0.1:5432/relix_test
+      JWT_SECRET: ci-test-secret
+      RELIX_WORKER_API_KEY: ci-worker-key
+      ADMIN_EMAIL: admin@relix.app
+      ADMIN_PASSWORD: change-me-please
+      WEB_ORIGIN: http://localhost:5173
+      SEED_ON_START: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: check
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Env from the example file
+        run: cp .env.example .env
+      - name: Build images
+        run: docker compose build
+      - name: Start the stack
+        run: docker compose up -d
+      - name: Health and seeded login
+        run: |
+          set -e
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8080/api/health; then
+              break
+            fi
+            if [ "$i" = "40" ]; then
+              docker compose logs api web worker
+              exit 1
+            fi
+            sleep 3
+          done
+          echo
+          curl -fsS -c /tmp/relix.cookies -H 'Content-Type: application/json' \
+            -d '{"email":"admin@relix.app","password":"change-me-please"}' \
+            http://127.0.0.1:8080/api/auth/login
+          echo
+          curl -fsS -b /tmp/relix.cookies http://127.0.0.1:8080/api/projects | grep -q sanctum
+          sleep 5
+          docker compose logs worker
+          docker compose logs worker | grep -E 'skipped|relix-worker'
+      - name: Stop
+        if: always()
+        run: docker compose down -v
