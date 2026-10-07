@@ -24,7 +24,7 @@ Relix is one repository. After `git clone`, the API, the browser UI, the worker,
 
 ## Request path
 
-The browser talks only to Relix. Nginx (or the Vite dev proxy) serves the UI and forwards `/api` and `/media` to the API. The worker calls the API with `X-Relix-Worker-Key`. The API calls OpenAI, SMTP, or the posting provider when those keys exist.
+The browser talks only to Relix. Nginx (or the Vite dev proxy) serves the UI and forwards `/api` and `/media` to the API. `GET /media/...` is public so image tags and the image job can load logos and brand references. Every other API route needs a session cookie or `X-Relix-Worker-Key`. The API calls OpenAI, SMTP, or the posting provider when those keys exist.
 
 ```mermaid
 flowchart LR

@@ -45,6 +45,12 @@ test('unauthenticated API calls are rejected', async () => {
   expect(res.status).toBe(401);
 });
 
+test('brand media is public so the worker and img tags can load it', async () => {
+  const res = await request(app).get('/media/brands/sanctum/logo.png');
+  expect(res.status).toBe(200);
+  expect(res.headers['content-type']).toMatch(/image\/png/);
+});
+
 test('health stays public and does not list projects', async () => {
   const res = await request(app).get('/api/health');
   expect(res.status).toBe(200);

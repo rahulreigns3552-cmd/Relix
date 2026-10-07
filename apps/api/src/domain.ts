@@ -947,6 +947,8 @@ function routeKind(req) {
   if (method === 'GET' && (p === '/api/channels/callback' || p === '/api/channels/go')) return 'public';
   if (method === 'POST' && p === '/api/channels/callback/select') return 'public';
   if (method === 'GET' && p === '/api/ig/email-action') return 'public';
+  // Logos, drafts, and brand references are loaded by img tags and by the worker.
+  if ((method === 'GET' || method === 'HEAD') && p.startsWith('/media/')) return 'public';
   const worker =
     (method === 'GET' && p === '/api/bridge/settings') ||
     (method === 'POST' && p === '/api/bridge/settings') ||
